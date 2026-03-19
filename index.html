@@ -1,0 +1,2635 @@
+<!doctype html>
+<html lang="sv">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>War On Women</title>
+    <style>
+
+        
+        @font-face {
+            font-family: 'Syncro';
+            src: url('fonts/SyncroUnlicensed-Book.otf') format('opentype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Syncro';
+            src: url('fonts/SyncroUnlicensed-Bold.otf') format('opentype');
+            font-weight: bold;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Syncro';
+            src: url('fonts/SyncroUnlicensed-Italic.otf') format('opentype');
+            font-weight: normal;
+            font-style: italic;
+        }
+        @font-face {
+            font-family: 'Syncro Mono';
+            src: url('fonts/SyncroUnlicensed-Mono.otf') format('opentype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Syncro Mono';
+            src: url('fonts/SyncroUnlicensed-MonoItalic.otf') format('opentype');
+            font-weight: normal;
+            font-style: italic;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .is-sr-only {
+            position: absolute !important;
+            width: 1px !important;
+            height: 1px !important;
+            padding: 0 !important;
+            margin: -1px !important;
+            overflow: hidden !important;
+            clip: rect(0, 0, 0, 0) !important;
+            white-space: nowrap !important;
+            border: 0 !important;
+        }
+
+        .layout {
+            display: flex;
+            height: 100vh;
+            width: 100%;
+        }
+
+        /* Vänster: nätverk – anpassad efter videons mått 1600×2200 */
+        .network-panel {
+            height: 100vh;
+            aspect-ratio: 1600 / 2200; /* bredd : höjd */
+            flex: 0 0 auto;
+            max-width: 45vw;
+            position: relative;
+            top: 0;
+            overflow: hidden;
+        }
+
+        .network-box {
+            width: 100%;
+            height: 100%;
+            background-color: #fff;
+            border-right: 1px solid #ccc;
+            position: relative;
+            overflow: hidden;
+        }
+        .network-box .bg-video {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* visa hela den croppade videon */
+            transform: none;     /* ingen extra inzoomning */
+            z-index: 0;
+        }
+        /* SVG-punkter – alltid cirkulära, positioner i procent (0–100) i viewBox */
+        .network-points-svg {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 2;
+
+        }
+        .network-points-svg svg {
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        .network-points-svg .point-g {
+            cursor: pointer;
+            pointer-events: auto;
+        }
+        .network-points-svg .point-g circle {
+            fill: #000;
+            transition: fill 0.15s ease, transform 0.15s ease;
+            transform-origin: 50% 50%;
+            transform-box: fill-box;
+        }
+
+  .network-points-svg .point-g:hover circle {
+    transform: scale(1.25);
+    fill: #fff;
+    opacity: 1;
+
+    
+}
+
+        .network-points-svg .point-g.is-active circle {
+            fill: url(#netActiveGlow);
+            filter: none;
+            stroke: none;
+            stroke-width: 0;
+            transform: scale(5);
+            opacity: 1;
+            transform-origin: 50% 50%;
+            transform-box: fill-box;
+            transition: transform 0.2s ease;
+        }
+        .network-points-svg .point-g.is-active .point-num {
+            fill: #000;
+        }
+
+        
+        .network-progress {
+            position: absolute;
+            top: 1.6rem;
+            bottom: 1.6rem;
+            right: 1.05rem;
+            width: 3px;
+            pointer-events: none;
+            z-index: 1;
+            opacity: 0.8;
+            background: rgba(255, 255, 255, 0.22);
+            border-radius: 999px;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.15);
+        }
+        .network-progress .network-progress-fill {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 100%;
+            transform-origin: bottom;
+            transform: scaleY(var(--net-progress, 0));
+            background: linear-gradient(to top, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.4));
+            border-radius: 999px;
+        }
+
+        /* (scroll-indikator i content-panel borttagen) */
+        .network-points-svg .point-g .point-num {
+            font-family: 'Syncro', serif;
+            fill: #000;
+            font-size: 1.5px;
+            text-anchor: start;
+        }
+        .network-points-svg .point-g.is-hovered .point-num {
+            opacity: 0;
+        }
+        .network-point-tooltip {
+            position: fixed;
+            left: 0;
+            top: 0;
+            font-family: 'Syncro', serif;
+            font-size: 10px;
+            color: #000;
+            padding: 0;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.15s ease;
+            z-index: 9999;
+            white-space: nowrap;
+            transform-origin: left center;
+        }
+        .network-point-tooltip.visible {
+            opacity: 1;
+        }
+
+        /* MUTE button – fixed bottom left of text section (PNG-bilder) */
+        .mute-wrap {
+            position: fixed;
+            bottom: 1.5rem;
+            /* Ligger i vänstra hörnet av högerspalten (inte i textmarginalen) */
+            left: calc(var(--network-panel-w, 0px) + 1.5rem);
+            right: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.35rem;
+            z-index: 1000;
+        }
+        .mute-btn {
+            width: 1.7rem;
+            height: 1.7rem;
+            min-width: 1.7rem;
+            min-height: 1.7rem;
+            padding: 0;
+            border: none;
+            cursor: pointer;
+            flex-shrink: 0;
+            background: transparent url('assets/mute.png') center/contain no-repeat;
+            transition: background-image 0.15s ease;
+        }
+        .mute-btn:hover {
+            background-image: url('assets/mute-hover.png');
+        }
+        .mute-btn.is-muted {
+            background-image: url('assets/mute-hover.png');
+        }
+        .layout.inverted .content-panel .mute-btn {
+            filter: invert(1);
+        }
+        .mute-label {
+            font-family: 'Syncro Mono', monospace;
+            font-size: 1rem; /* matchar knappens bredd (1rem) */
+            color: #000;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+            line-height: 1;
+            writing-mode: vertical-rl;   /* MUTE vertikalt */
+            text-orientation: mixed;
+            transform: rotate(180deg);   /* läs uppifrån och ner */
+            order: -1; /* label ovanför knappen */
+            inline-size: 1rem;
+            text-align: center;
+        }
+        .layout.inverted .content-panel .mute-label {
+            color: #fff;
+        }
+
+        /* Höger: scrollbar innehåll */
+        .content-panel {
+            flex: 1;
+            height: 100vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+            scrollbar-width: none; /* Firefox: hide native scrollbar */
+            -ms-overflow-style: none; /* IE/Edge legacy */
+            /* extra bottenpadding så text inte går under mute */
+            --content-pad: clamp(1.5rem, 2.5vw, 3rem);
+            padding: 15rem var(--content-pad) 18rem;
+            background: #fff;
+            transition: background-color 0.6s ease, color 0.6s ease;
+            position: relative;
+        }
+        .content-panel::-webkit-scrollbar {
+            width: 0;
+            height: 0;
+        }
+
+        .content-inner {
+            max-width: 200ch;
+            width: 100%;
+            margin: 0 auto;
+        }
+        /* När skärmen blir stor: skala upp “sidan” men håll centrerat */
+        @media (min-width: 1400px) {
+            .content-inner {
+                max-width: min(200ch, 96%);
+            }
+        }
+
+        .content-panel h1,
+        .content-panel .title-image {
+            margin: 0 0 1rem;
+        }
+        .content-panel .title-image {
+            display: block;
+            width: min(80%, 60rem);
+            max-width: none;
+            height: auto;
+            position: relative;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .content-panel p {
+            font-family: 'Syncro', normal;
+            font-size: clamp(1.05rem, 0.9rem + 0.8vw, 1.6rem);
+            line-height: 1.7;
+            color: #333;
+            max-width: 65ch;
+        }
+
+        /* Kapitelrubriker */
+        .chapter-heading {
+            font-family: 'Syncro Mono', monospace;
+            font-weight: normal;
+            font-size: 1rem;
+            color: #111;
+            margin: 8rem 0 5rem;
+            letter-spacing: -0.04em;
+            text-align: center;
+        }
+        .chapter-heading:first-of-type {
+            margin-top: 0;
+        }
+
+        /* Numrering */
+        .fact-num {
+            font-family: 'Syncro Mono', monospace;
+            font-size: 0.7rem;
+            color: #000;
+            letter-spacing: 0.05em;
+        }
+
+        /* Faktablock — prose: klassiskt, Syncro Book */
+        .fact {
+            display: grid;
+            /* Återställ till “centrerad igen” (stabil responsiv) innan vi flyttade allt åt höger */
+            --fact-gutter: clamp(0.5rem, 2.2vw, 3rem);
+            grid-template-columns: var(--fact-gutter) minmax(52ch, 2.2fr) auto minmax(24ch, 1fr);
+            grid-template-rows: auto auto;
+            row-gap: 4.5rem;   /* mer luft mellan numrering och text */
+            column-gap: 2rem;  /* mindre marginaler sidled */
+            margin-bottom: 26rem;
+            align-items: start;
+        }
+        .fact .fact-num {
+            grid-column: 1 / -1; /* centrera mot hela gridden/panelen */
+            grid-row: 1;
+            align-self: flex-start;
+            justify-self: center;
+            font-family: 'Syncro Mono', monospace;
+            font-size: 0.8rem;
+            margin: 0;
+            text-align: center;
+            color: #000;
+        }
+        .fact .fact-num::after {
+            content: '.';
+            margin-left: 0.05em;
+            color: #000;
+        }
+        .fact .fact-title {
+            grid-column: 2;
+            grid-row: 2;
+            font-family: 'Syncro';
+            font-weight: normal;
+            font-size: 0.9rem;
+            letter-spacing: 0.02em;
+            margin: 0 0 1rem;
+            color: #111;
+        }
+        .fact .fact-body {
+            grid-column: 2;
+            grid-row: 2;
+            font-family: 'Syncro';
+            font-weight: normal;
+            font-size: 0.44rem;
+            line-height: 1.34;
+            color: #222;
+            margin: 0;
+            max-width: none; /* grid styr bredden */
+            letter-spacing: 0.02em;
+        }
+        .fact:has(.fact-image) {
+            display: block;
+            text-align: center;
+            padding-right: 0;
+        }
+        .fact .fact-image {
+            display: block;
+            max-width: 80%;
+            height: auto;
+            margin: 0 auto 1rem;
+        }
+        .fact .fact-image + .fact-source {
+            display: block !important;
+            text-align: center !important;
+            max-width: 70ch;
+            margin-left: auto !important;
+            margin-right: auto !important;
+            padding-left: 0 !important;
+            font-family: 'Syncro', sans-serif;
+            font-style: italic;
+            font-size: 0.7rem;
+            line-height: 1.5;
+            color: #888;
+            grid-column: 1 / -1;
+        }
+        .fact .fact-source {
+            grid-column: 4;
+            grid-row: 2;
+            align-self: flex-start; /* JS lägger margin-top så den startar vid näst sista raden */
+            font-family: 'Syncro';
+            font-style: italic;
+            font-size: 0.7rem;
+            line-height: 1.4;
+            color: #999;
+            max-width: 28ch; /* bredare källspalt */
+            margin: 0;
+            text-align: right;
+            transform: none;
+        }
+
+        /* Citat — poetiskt, Syncro Mono, intryckt höger */
+        /* (Gammal citat-layout borttagen — använder 3-kolumns-layout längre ner) */
+
+        /* Citat i nya 3-kolumns-layouten: källa till höger, aldrig ovanför citatet */
+        .fact--quote .fact-body {
+            font-size: 0.44rem;
+            line-height: 1.3;
+            max-width: 150ch;
+            letter-spacing: 0.02em;
+        }
+
+        /* .fact .fact-source definieras ovan (håll en källa-regel) */
+
+        /* Korta citat — större, smalare */
+        .fact--quote-short .fact-body {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            max-width: 24ch;
+        }
+
+        /* ---- INVERSION: Svart bakgrund under Våld-kapitlet ---- */
+        .layout.inverted .content-panel {
+            background-color: #000;
+            color: #fff;
+        }
+        .layout.inverted .content-panel .chapter-heading {
+            color: #fff;
+        }
+        .layout.inverted .content-panel .fact .fact-body {
+            color: #fff;
+        }
+        .layout.inverted .content-panel .fact .fact-body .redacted {
+            color: #000;
+        }
+        .layout.inverted .content-panel .fact.revealed .fact-body .redacted {
+            color: #fff;
+        }
+        .layout.inverted .content-panel .fact .fact-body .redacted::before {
+            color: #555;
+        }
+        .layout.inverted .content-panel .fact .fact-num {
+            color: #fff;
+        }
+        .layout.inverted .content-panel .fact .fact-source {
+            color: #ccc;
+        }
+        .layout.inverted .content-panel .fact .fact-num::after {
+            color: #fff;
+        }
+
+        /* ---- KAPITEL: Svensk kontextualisering — index-känsla ---- */
+        .chapter--svensk {
+            max-width: 80ch;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .chapter--svensk .fact {
+            display: grid;
+            --fact-gutter: clamp(0.5rem, 2.2vw, 3rem);
+            grid-template-columns: var(--fact-gutter) minmax(52ch, 2.2fr) auto minmax(24ch, 1fr);
+            grid-template-rows: auto auto;
+            row-gap: 4.5rem;
+            column-gap: 3rem;
+            margin-bottom: 26rem;
+            text-align: left;
+        }
+        .chapter--svensk .fact .fact-num {
+            font-size: 0.85rem;
+        }
+        .chapter--svensk .fact .fact-body {
+            display: block;
+            font-family: 'Syncro';
+            font-size: 0.75rem;
+            line-height: 1.55;
+            color: #222;
+            margin: 0;
+            text-indent: 3ch;
+            max-width: none;
+        }
+        .chapter--svensk .fact--quote .fact-body,
+        .chapter--svensk .fact--quote-short .fact-body {
+            font-family: 'Syncro';
+            font-size: 0.44rem;
+            line-height: 1.3;
+            max-width: 150ch;
+            margin-left: auto;
+            margin-right: auto;
+            text-indent: 0;
+            text-align: center;
+        }
+        .chapter--svensk .fact .fact-source {
+            grid-column: 4;
+            grid-row: 2;
+            align-self: flex-end;
+            font-family: 'Syncro Mono', monospace;
+            font-size: 0.55rem;
+            color: #aaa;
+            margin: 4rem 0 0;
+            letter-spacing: -0.02em;
+            line-height: 1.4;
+            max-width: 28ch;
+            text-align: right;
+        }
+        .chapter--svensk .fact--quote .fact-source,
+        .chapter--svensk .fact--quote-short .fact-source {
+            text-align: center;
+        }
+        .chapter--svensk .fact--quote .fact-num,
+        .chapter--svensk .fact--quote-short .fact-num {
+            text-align: center;
+        }
+        .chapter--svensk .fact .fact-image {
+            display: block;
+            max-width: 80%;
+            margin: 0 auto 0.5rem;
+        }
+
+        /* ---- KAPITEL: Våld och krig — transkriberingskänsla ---- */
+        .chapter--vald .fact {
+            display: grid;
+            --fact-gutter: clamp(0.5rem, 2.2vw, 3rem);
+            grid-template-columns: var(--fact-gutter) minmax(52ch, 2.2fr) auto minmax(24ch, 1fr);
+            grid-template-rows: auto auto;
+            row-gap: 4.5rem;
+            column-gap: 3rem;
+            margin-bottom: 26rem;
+        }
+        .chapter--vald .fact .fact-num {
+            font-size: 0.78rem;
+        }
+        .chapter--vald .fact .fact-body {
+            font-family: 'Syncro Mono', monospace;
+            font-size: 0.7rem;
+            line-height: 1.5;
+            letter-spacing: -0.03em;
+            color: inherit;
+            max-width: none;
+        }
+        .chapter--vald .fact .fact-source {
+            grid-column: 4;
+            grid-row: 2;
+            align-self: flex-end;
+            font-family: 'Syncro Mono', monospace;
+            font-style: normal;
+            font-size: 0.55rem;
+            color: inherit;
+            opacity: 0.5;
+            max-width: 28ch;
+            text-align: right;
+            margin: 4rem 0 0;
+        }
+        .chapter--vald .fact--quote .fact-body {
+            font-style: normal;
+            max-width: 40ch;
+            text-align: left;
+            margin-left: 0;
+        }
+        .chapter--vald .fact--quote-en .fact-body {
+            font-style: italic;
+        }
+
+        /* ---- KAPITEL: Diplomatisk — klassisk, filosofisk ---- */
+        .chapter--diplo {
+            max-width: 90ch;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .chapter--diplo .fact {
+            display: grid;
+            --fact-gutter: clamp(0.5rem, 2.2vw, 3rem);
+            grid-template-columns: var(--fact-gutter) minmax(52ch, 2.2fr) auto minmax(24ch, 1fr);
+            grid-template-rows: auto auto;
+            row-gap: 4.5rem;
+            column-gap: 3rem;
+            margin-bottom: 26rem;
+            align-items: stretch;
+        }
+        .chapter--diplo .fact .fact-num {
+            grid-column: 1 / -1;
+            grid-row: 1;
+            align-self: center;
+            font-size: 0.8rem;
+        }
+        .chapter--diplo .fact .fact-body {
+            grid-column: 2;
+            grid-row: 1;
+            font-family: 'Syncro';
+            font-weight: normal;
+            font-size: 0.75rem;
+            line-height: 1.55;
+            color: inherit;
+        }
+
+        /* Större skärmar: skala upp texten lite som en hel “sida” */
+        @media (min-width: 1400px) {
+            .fact .fact-body {
+                font-size: 0.95rem;
+            }
+            .chapter--svensk .fact .fact-body {
+                font-size: 0.9rem;
+            }
+            .chapter--vald .fact .fact-body {
+                font-size: 0.85rem;
+            }
+            .chapter--diplo .fact .fact-body {
+                font-size: 0.95rem;
+            }
+        }
+        .chapter--diplo .fact .fact-source {
+            grid-column: 3;
+            grid-row: 2;
+            align-self: flex-end;
+            font-family: 'Syncro';
+            font-style: italic;
+            font-size: 0.65rem;
+            line-height: 1.5;
+            color: inherit;
+            opacity: 0.5;
+            max-width: 28ch;
+            text-align: right;
+            margin: 4rem 0 0;
+        }
+        .chapter--diplo .fact--quote {
+            display: block;
+            max-width: 30ch;
+            margin-left: auto;
+            margin-right: auto;
+            margin-bottom: 12rem;
+        }
+        .chapter--diplo .fact--quote .fact-body {
+            font-family: 'Syncro';
+            font-style: italic;
+            font-size: 0.44rem;
+            line-height: 1.3;
+            text-align: center;
+            max-width: 150ch;
+        }
+        .chapter--diplo .fact--quote .fact-source {
+            display: block;
+            text-align: right;
+            max-width: none;
+            width: 140%;
+            margin: 1.5rem 0 0;
+            padding-left: 40%;
+        }
+        .chapter--diplo .fact--quote .fact-num {
+            text-align: center;
+        }
+
+        /* Bild-fakter: behåll “stor bild + källa under” layouten */
+        .fact:has(.fact-image) {
+            display: block !important;
+            padding-right: 0 !important;
+        }
+        .fact:has(.fact-image) .fact-num {
+            display: block;
+            margin: 0 0 2.5rem !important;
+        }
+        .fact:has(.fact-image) .fact-source {
+            grid-column: auto !important;
+            grid-row: auto !important;
+            display: block !important;
+            max-width: 80%;
+            margin: 0.75rem auto 0;
+            text-align: center !important;
+            transform: none !important;
+        }
+
+        /* Poetiskt stycke — 2-3 ord per rad, varierande indrag */
+        .fact--poem {
+            display: block !important;
+            max-width: 40ch;
+            margin-bottom: 12rem;
+        }
+        .fact--poem .fact-body {
+            font-family: 'Syncro' !important;
+            font-size: 0.9rem !important;
+            line-height: 2.8 !important;
+            letter-spacing: 0.02em;
+            white-space: pre-line;
+        }
+        .fact--poem .fact-body .poem-line {
+            display: block;
+        }
+        .fact--poem .fact-body .poem-line:nth-child(1)  { padding-left: 0; }
+        .fact--poem .fact-body .poem-line:nth-child(2)  { padding-left: 6ch; }
+        .fact--poem .fact-body .poem-line:nth-child(3)  { padding-left: 2ch; }
+        .fact--poem .fact-body .poem-line:nth-child(4)  { padding-left: 12ch; }
+        .fact--poem .fact-body .poem-line:nth-child(5)  { padding-left: 4ch; }
+        .fact--poem .fact-body .poem-line:nth-child(6)  { padding-left: 9ch; }
+        .fact--poem .fact-body .poem-line:nth-child(7)  { padding-left: 1ch; }
+        .fact--poem .fact-body .poem-line:nth-child(8)  { padding-left: 7ch; }
+        .fact--poem .fact-body .poem-line:nth-child(9)  { padding-left: 14ch; }
+        .fact--poem .fact-body .poem-line:nth-child(10) { padding-left: 3ch; }
+        .fact--poem .fact-source {
+            margin-top: 2rem;
+            text-align: right;
+            padding-left: 50%;
+        }
+
+        /* Scroll-reveal: fade med placeholder-symboler */
+        .chapter .fact .fact-body .redacted {
+            display: inline;
+            position: relative;
+            color: #fff;
+            transition: color 1.4s ease 0.7s;
+        }
+        .chapter .fact .fact-body .redacted::before {
+            content: attr(data-ph);
+            position: absolute;
+            left: 0;
+            top: 0;
+            color: #ccc;
+            font-family: 'Syncro Mono', monospace;
+            letter-spacing: -0.03em;
+            white-space: pre;
+            opacity: 1;
+            transition: opacity 1s ease 0.5s;
+            pointer-events: none;
+        }
+        .chapter .fact.revealed .fact-body .redacted {
+            color: inherit;
+        }
+        .chapter .fact.revealed .fact-body .redacted::before {
+            opacity: 0;
+        }
+        .chapter .fact .fact-source {
+            opacity: 0;
+            transition: opacity 0.7s ease 1.5s;
+        }
+        .chapter .fact.revealed .fact-source {
+            opacity: 1;
+        }
+        .chapter .fact .fact-num::after {
+            content: '';
+        }
+
+        .intro-block {
+            margin-top: 3rem;
+            margin-bottom: 10rem;
+        }
+        .intro-block .ingress-citat {
+            font-family: 'Syncro';
+            font-weight: normal;
+            font-style: normal;
+            font-size: 0.9rem;
+            line-height: 1.7;
+            margin: 4rem auto;
+            color: #333;
+            max-width: 15ch;
+            text-align: center;
+            position: relative;
+        }
+        .intro-block .ingress-citat::before {
+            content: '';
+            position: absolute;
+            inset: -1.5rem -2rem;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)' opacity='0.06'/%3E%3C/svg%3E");
+            mask-image: radial-gradient(ellipse at 50% 50%, black 20%, transparent 75%);
+            -webkit-mask-image: radial-gradient(ellipse at 50% 50%, black 20%, transparent 75%);
+            pointer-events: none;
+            z-index: -1;
+        }
+        .intro-block .ingress-tes {
+            font-family: 'Syncro Mono', monospace;
+            font-weight: normal;
+            font-size: 0.9rem;
+            line-height: 1.95;
+            letter-spacing: 0.06em;
+            margin: 0 0 15rem;
+            color: #333;
+            max-width: 80ch;
+        }
+
+        /* (tidigare avslutnings-layout borttagen) */
+
+        /* Avslutning: fullskärms “night mode” */
+        .outro-sentinel {
+            height: 1px;
+        }
+        .outro-screen {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            background: rgba(0, 0, 0, 0.18);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            color: #fff;
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 6rem 2.5rem;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none; /* så att man kan scrolla upp igen */
+            transition: opacity 1.1s ease, visibility 0s linear 1.1s;
+            isolation: isolate;
+            overflow: hidden;
+        }
+        body.outro-active .outro-screen {
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 1.4s ease, visibility 0s linear 0s;
+        }
+        .outro-screen::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                /* ljusa “mögel”-fläckar som diffunderar videons radialitet */
+                radial-gradient(circle at 10% 14%, rgba(200, 220, 210, 0.44) 0%, rgba(200, 220, 210, 0) 48%),
+                radial-gradient(circle at 92% 16%, rgba(220, 236, 228, 0.38) 0%, rgba(220, 236, 228, 0) 50%),
+                radial-gradient(circle at 6% 84%, rgba(190, 214, 202, 0.34) 0%, rgba(190, 214, 202, 0) 54%),
+                radial-gradient(circle at 96% 86%, rgba(220, 238, 230, 0.42) 0%, rgba(220, 238, 230, 0) 52%),
+                radial-gradient(circle at 22% 52%, rgba(175, 202, 190, 0.24) 0%, rgba(175, 202, 190, 0) 56%),
+                radial-gradient(circle at 78% 58%, rgba(230, 244, 238, 0.22) 0%, rgba(230, 244, 238, 0) 58%),
+                /* extra “hot spots” så det verkligen blir splotchy */
+                radial-gradient(circle at 38% 18%, rgba(235, 248, 242, 0.30) 0%, rgba(235, 248, 242, 0) 34%),
+                radial-gradient(circle at 64% 78%, rgba(210, 234, 224, 0.26) 0%, rgba(210, 234, 224, 0) 38%),
+                /* grain ovanpå (behåll) */
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)' opacity='0.12'/%3E%3C/svg%3E");
+            mix-blend-mode: overlay;
+            opacity: 0.72;
+            filter: blur(4px) contrast(1.42) brightness(1.06) saturate(0.95);
+            pointer-events: none;
+            will-change: transform, opacity;
+            z-index: 0;
+        }
+        .outro-screen::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                /* mörk vignette runt kanter */
+                radial-gradient(ellipse at 50% 45%, rgba(0, 0, 0, 0.05) 0%, rgba(0, 0, 0, 0.38) 56%, rgba(0, 0, 0, 0.92) 100%),
+                /* ojämna mörka “pockets” så att videons svärta flyter in */
+                radial-gradient(circle at 18% 28%, rgba(0, 0, 0, 0.78) 0%, rgba(0, 0, 0, 0) 38%),
+                radial-gradient(circle at 82% 62%, rgba(0, 0, 0, 0.64) 0%, rgba(0, 0, 0, 0) 42%),
+                radial-gradient(circle at 52% 88%, rgba(0, 0, 0, 0.72) 0%, rgba(0, 0, 0, 0) 44%),
+                /* extra ojämnheter vid kanter/hörn */
+                radial-gradient(circle at 6% 10%, rgba(0, 0, 0, 0.80) 0%, rgba(0, 0, 0, 0) 34%),
+                radial-gradient(circle at 96% 14%, rgba(0, 0, 0, 0.72) 0%, rgba(0, 0, 0, 0) 36%),
+                radial-gradient(circle at 4% 78%, rgba(0, 0, 0, 0.70) 0%, rgba(0, 0, 0, 0) 40%),
+                radial-gradient(circle at 98% 86%, rgba(0, 0, 0, 0.86) 0%, rgba(0, 0, 0, 0) 38%),
+                radial-gradient(ellipse at 50% 104%, rgba(0, 0, 0, 0.70) 0%, rgba(0, 0, 0, 0) 46%),
+                radial-gradient(ellipse at -6% 50%, rgba(0, 0, 0, 0.62) 0%, rgba(0, 0, 0, 0) 50%),
+                radial-gradient(ellipse at 106% 52%, rgba(0, 0, 0, 0.64) 0%, rgba(0, 0, 0, 0) 50%);
+            opacity: 0.72;
+            pointer-events: none;
+            z-index: -2;
+            will-change: transform, opacity;
+            transform: translate3d(0, 0, 0) scale(1);
+            transform-origin: 50% 45%;
+        }
+
+        /* Bakgrundsanimation borttagen (videobakgrund används i stället) */
+
+        .outro-bg-video {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -3;
+            pointer-events: none;
+            transform: scale(1.03);
+        }
+        .outro-bg-image {
+            background-image: url('assets/gradient-noise.png');
+            background-size: cover;
+            background-position: center;
+        }
+
+        body.outro-active .mute-wrap {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Startskärm: klicka igenom intro-sekvens */
+        body.start-active {
+            overflow: hidden;
+        }
+        body.start-active .layout {
+            pointer-events: none;
+            user-select: none;
+        }
+        .start-screen {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2500;
+            color: #fff;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 700ms ease, visibility 0s linear 700ms;
+            isolation: isolate;
+            overflow: hidden;
+            background: #000;
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            padding: 6rem 2.5rem;
+        }
+        body.start-active .start-screen {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+            transition: opacity 900ms ease, visibility 0s linear 0s;
+        }
+        .start-screen::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(circle at 18% 22%, rgba(255, 255, 255, 0.10), transparent 42%),
+                radial-gradient(circle at 84% 64%, rgba(255, 255, 255, 0.06), transparent 46%),
+                radial-gradient(ellipse at 50% 55%, rgba(0, 0, 0, 0.18) 0%, rgba(0, 0, 0, 0.72) 70%, rgba(0, 0, 0, 0.92) 100%);
+            mix-blend-mode: overlay;
+            opacity: 0.55;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .start-card {
+            position: relative;
+            z-index: 1;
+            width: min(80ch, 92vw);
+            display: grid;
+            gap: 1.8rem;
+            text-align: center;
+        }
+        .start-card,
+        .start-card * {
+            hyphens: none;
+            -webkit-hyphens: none;
+            word-break: normal;
+            overflow-wrap: normal;
+        }
+        .start-step {
+            display: none;
+            animation: start-fade 420ms ease both;
+        }
+        .start-step.is-active {
+            display: block;
+        }
+        @keyframes start-fade {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .start-quote {
+            font-family: 'Syncro';
+            font-size: 1.1rem;
+            line-height: 1.75;
+            letter-spacing: 0.04em;
+            font-style: normal;
+            font-weight: 200;
+        }
+        .start-thesis {
+            font-family: 'Syncro Mono', monospace;
+            font-size: 0.95rem;
+            line-height: 1.95;
+            opacity: 0.92;
+            letter-spacing: 0.06em;
+            font-weight: 300;
+        }
+        .start-title-word {
+            font-family: 'Syncro Mono', monospace;
+            font-size: clamp(2.0rem, 3.8vw, 3.2rem);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            display: inline-flex;
+            gap: 0.02em;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+        .start-title-word.visible {
+            opacity: 1;
+        }
+        .start-title-char {
+            display: inline-block;
+            opacity: 0;
+            transition: font-weight 0.12s ease, transform 0.12s ease, filter 0.12s ease, opacity 0.15s ease;
+        }
+        .start-jitter {
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+        .start-jitter.visible {
+            opacity: 1;
+        }
+        .start-jitter-char {
+            display: inline-block;
+            opacity: 0;
+            transition: font-weight 0.12s ease, transform 0.12s ease, filter 0.12s ease, opacity 0.15s ease;
+        }
+        .start-jitter-word {
+            display: inline-block;
+            white-space: nowrap;
+        }
+        .start-sound-prompt {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 1.8rem;
+            display: flex;
+            justify-content: center;
+            z-index: 2;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 450ms ease;
+        }
+        .start-sound-prompt.is-visible {
+            opacity: 0.55;
+        }
+        .start-sound-prompt span {
+            font-family: 'Syncro Mono', monospace;
+            font-size: 0.72rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        /* Puls / hjärtslag för den svarta kärnan */
+        @keyframes outro-heartbeat {
+            0%   { transform: translate3d(0,0,0) scale(1); opacity: 0.28; }
+            10%  { transform: translate3d(0,0,0) scale(1.025); opacity: 0.36; } /* långsam utandning */
+            22%  { transform: translate3d(0,0,0) scale(1.055); opacity: 0.44; } /* topp */
+            40%  { transform: translate3d(0,0,0) scale(1.01); opacity: 0.30; }  /* tillbaka */
+            100% { transform: translate3d(0,0,0) scale(1); opacity: 0.28; }
+        }
+        body.outro-active .outro-screen::after {
+            animation: outro-heartbeat 7.6s ease-in-out infinite;
+        }
+        @keyframes outro-grain-flicker {
+            0% { opacity: 0.16; transform: translate3d(0,0,0); }
+            25% { opacity: 0.26; transform: translate3d(1.4%, -1.1%, 0); }
+            55% { opacity: 0.18; transform: translate3d(-1.1%, 1.4%, 0); }
+            100% { opacity: 0.16; transform: translate3d(0,0,0); }
+        }
+        body.outro-active .outro-screen::before {
+            animation: outro-grain-flicker 4.8s ease-in-out infinite;
+        }
+        .outro-screen .outro-text {
+            max-width: 62ch;
+            margin: 0;
+            text-align: center;
+            font-family: 'Syncro Mono', monospace;
+            font-size: 0.9rem;
+            line-height: 1.95;
+            color: inherit;
+            position: relative;
+            z-index: 1;
+            letter-spacing: 0.06em;
+        }
+        .outro-lines {
+            max-width: 62ch;
+            margin: 0;
+            text-align: center;
+            font-family: 'Syncro';
+            font-size: 0.9rem;
+            line-height: 1.8;
+            color: inherit;
+            position: relative;
+            letter-spacing: 0.02em;
+        }
+        .outro-line {
+            margin: 0;
+        }
+        .outro-line + .outro-line {
+            margin-top: 1.2rem; /* luft mellan meningarna */
+        }
+        .page-disclaimer {
+            display: none; /* flyttad till outro-screen för att alltid vara synlig vid slut */
+        }
+
+        .outro-footer-disclaimer {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 2.2rem;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+            padding: 0 2.5rem;
+            max-width: 150ch;
+            text-align: center;
+            font-family: 'Syncro Mono', monospace;
+            font-size: 0.65rem;
+            line-height: 1.45;
+            letter-spacing: 0.04em;
+            opacity: 0.92;
+            z-index: 2001;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="start-screen" aria-label="Start">
+        <div class="start-card">
+            <div class="start-step is-active" data-start-step="quote">
+                <div class="start-quote start-jitter" data-start-jitter="quote">“Alla riskerar våld i<br>konflikter, men vi är vana<br>vid mäns berättelser.”</div>
+            </div>
+            <div class="start-step" data-start-step="thesis">
+                <div class="start-thesis start-jitter" data-start-jitter="thesis">Kvinnor drabbas av oförutsedda och brutala konsekvenser i krigstid, eftersom beredskapsdiskussionen saknar ett kvinnoperspektiv. Det här är vår samling av data och bilder ur ett kvinnligt perspektiv på krig.</div>
+            </div>
+            <div class="start-step" data-start-step="title">
+                <div class="start-title-word" id="start-title"></div>
+            </div>
+        </div>
+        <div class="start-sound-prompt" id="start-sound-prompt" aria-hidden="true">
+            <span>Sätt på ljud</span>
+        </div>
+    </div>
+    <div class="layout">
+        <aside class="network-panel">
+            <div class="network-box">
+                <video class="bg-video" autoplay muted loop playsinline>
+                    <source src="assets/nervmöstrettill-tindra_cropped..mp4" type="video/mp4">
+                </video>
+                <div class="network-progress" aria-hidden="true">
+                    <div class="network-progress-fill"></div>
+                </div>
+                <!-- Punkter som SVG – redigera cx, cy (0–100) för att matcha din punkt-PNG -->
+                <div class="network-points-svg" aria-hidden="true">
+                    <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            
+                            <radialGradient id="netActiveGlow" cx="50%" cy="50%" r="85%">
+                                <stop offset="0%" stop-color="rgba(255,255,255,1)"/>
+                                <stop offset="28%" stop-color="rgba(255,255,255,1)"/>
+                                <stop offset="60%" stop-color="rgba(255,255,255,0.25)"/>
+                                <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+                            </radialGradient>
+                            <filter id="netAnalogGlow" x="-60%" y="-60%" width="220%" height="220%">
+                                <feGaussianBlur in="SourceGraphic" stdDeviation="0.55" result="blur"/>
+                                <feColorMatrix in="blur" type="matrix"
+                                  values="1 0 0 0 0
+                                          0 1 0 0 0
+                                          0 0 1 0 0
+                                          0 0 0 0.85 0" result="glow"/>
+                                <feMerge>
+                                    <feMergeNode in="glow"/>
+                                    <feMergeNode in="SourceGraphic"/>
+                                </feMerge>
+                            </filter>
+                        </defs>
+                                                <g class="point-g" data-entry="1" data-num="1" role="button" tabindex="0"><circle cx="38.7" cy="7.5" r="0.45"/><text class="point-num" x="39.7" y="7.5">1</text></g>
+                        <g class="point-g" data-entry="2" data-num="2" role="button" tabindex="0"><circle cx="38.1" cy="18.3" r="0.45"/><text class="point-num" x="39.1" y="18.3">2</text></g>
+                        <g class="point-g" data-entry="3" data-num="3" role="button" tabindex="0"><circle cx="42" cy="19.8" r="0.45"/><text class="point-num" x="43" y="19.8">3</text></g>
+                        <g class="point-g" data-entry="4" data-num="4" role="button" tabindex="0"><circle cx="55.5" cy="21" r="0.45"/><text class="point-num" x="56.5" y="21">4</text></g>
+                        <g class="point-g" data-entry="5" data-num="5" role="button" tabindex="0"><circle cx="37.15" cy="25" r="0.45"/><text class="point-num" x="38.15" y="25">5</text></g>
+                        <g class="point-g" data-entry="6" data-num="6" role="button" tabindex="0"><circle cx="26.5" cy="26.5" r="0.45"/><text class="point-num" x="27.5" y="26.5">6</text></g>
+                        <g class="point-g" data-entry="7" data-num="7" role="button" tabindex="0"><circle cx="42.6" cy="26.4" r="0.45"/><text class="point-num" x="43.6" y="26.4">7</text></g>
+                        <g class="point-g" data-entry="8" data-num="8" role="button" tabindex="0"><circle cx="24" cy="32.2" r="0.45"/><text class="point-num" x="25" y="32.2">8</text></g>
+                        <g class="point-g" data-entry="9" data-num="9" role="button" tabindex="0"><circle cx="44.9" cy="30.5" r="0.45"/><text class="point-num" x="45.9" y="30.5">9</text></g>
+                        <g class="point-g" data-entry="10" data-num="10" role="button" tabindex="0"><circle cx="61" cy="34.5" r="0.45"/><text class="point-num" x="62" y="34.5">10</text></g>
+                        <g class="point-g" data-entry="11" data-num="11" role="button" tabindex="0"><circle cx="51" cy="39" r="0.45"/><text class="point-num" x="52" y="39">11</text></g>
+                        <g class="point-g" data-entry="12" data-num="12" role="button" tabindex="0"><circle cx="80.5" cy="36" r="0.45"/><text class="point-num" x="81.5" y="36">12</text></g>
+                        <g class="point-g" data-entry="13" data-num="13" role="button" tabindex="0"><circle cx="70.7" cy="41.5" r="0.45"/><text class="point-num" x="71.7" y="41.5">13</text></g>
+                        <g class="point-g" data-entry="14" data-num="14" role="button" tabindex="0"><circle cx="36.5" cy="42.5" r="0.45"/><text class="point-num" x="37.5" y="42.5">14</text></g>
+                        <g class="point-g" data-entry="15" data-num="15" role="button" tabindex="0"><circle cx="66" cy="45" r="0.45"/><text class="point-num" x="67" y="45">15</text></g>
+                        <g class="point-g" data-entry="16" data-num="16" role="button" tabindex="0"><circle cx="32.5" cy="45.2" r="0.45"/><text class="point-num" x="33.5" y="45.2">16</text></g>
+                        <g class="point-g" data-entry="17" data-num="17" role="button" tabindex="0"><circle cx="57" cy="46.3" r="0.45"/><text class="point-num" x="58" y="46.3">17</text></g>
+                        <g class="point-g" data-entry="18" data-num="18" role="button" tabindex="0"><circle cx="38.8" cy="46.5" r="0.45"/><text class="point-num" x="39.8" y="46.5">18</text></g>
+                        <g class="point-g" data-entry="19" data-num="19" role="button" tabindex="0"><circle cx="62.5" cy="49.5" r="0.45"/><text class="point-num" x="63.5" y="49.5">19</text></g>
+                        <g class="point-g" data-entry="20" data-num="20" role="button" tabindex="0"><circle cx="44.2" cy="50.5" r="0.45"/><text class="point-num" x="45.2" y="50.5">20</text></g>
+                        <g class="point-g" data-entry="21" data-num="21" role="button" tabindex="0"><circle cx="63" cy="56.5" r="0.45"/><text class="point-num" x="64" y="56.5">21</text></g>
+                        <g class="point-g" data-entry="22" data-num="22" role="button" tabindex="0"><circle cx="24.15" cy="58.4" r="0.45"/><text class="point-num" x="25.15" y="58.4">22</text></g>
+                        <g class="point-g" data-entry="23" data-num="23" role="button" tabindex="0"><circle cx="45.2" cy="63.4" r="0.45"/><text class="point-num" x="46.2" y="63.4">23</text></g>
+                        <g class="point-g" data-entry="24" data-num="24" role="button" tabindex="0"><circle cx="60" cy="66" r="0.45"/><text class="point-num" x="61" y="66">24</text></g>
+                        <g class="point-g" data-entry="25" data-num="25" role="button" tabindex="0"><circle cx="26.3" cy="68.25" r="0.45"/><text class="point-num" x="27.3" y="68.25">25</text></g>
+                        <g class="point-g" data-entry="26" data-num="26" role="button" tabindex="0"><circle cx="53.65" cy="70.5" r="0.45"/><text class="point-num" x="54.65" y="70.5">26</text></g>
+                        <g class="point-g" data-entry="27" data-num="27" role="button" tabindex="0"><circle cx="65.5" cy="72.8" r="0.45"/><text class="point-num" x="66.5" y="72.8">27</text></g>
+                        <g class="point-g" data-entry="28" data-num="28" role="button" tabindex="0"><circle cx="22.45" cy="74.9" r="0.45"/><text class="point-num" x="23.45" y="74.9">28</text></g>
+                        <g class="point-g" data-entry="29" data-num="29" role="button" tabindex="0"><circle cx="55.7" cy="76.5" r="0.45"/><text class="point-num" x="56.7" y="76.5">29</text></g>
+                        <g class="point-g" data-entry="30" data-num="30" role="button" tabindex="0"><circle cx="64.1" cy="82.5" r="0.45"/><text class="point-num" x="65.1" y="82.5">30</text></g>
+                        <g class="point-g" data-entry="31" data-num="31" role="button" tabindex="0"><circle cx="69.9" cy="78.7" r="0.45"/><text class="point-num" x="70.9" y="78.7">31</text></g>
+                        <g class="point-g" data-entry="32" data-num="32" role="button" tabindex="0"><circle cx="38.1" cy="85.4" r="0.45"/><text class="point-num" x="39.2" y="84.5">32</text></g>
+                        <g class="point-g" data-entry="33" data-num="33" role="button" tabindex="0"><circle cx="54.5" cy="87.5" r="0.45"/><text class="point-num" x="55.5" y="87.5">33</text></g>
+                        <g class="point-g" data-entry="34" data-num="34" role="button" tabindex="0"><circle cx="62.5" cy="94.5" r="0.45"/><text class="point-num" x="63.5" y="94.5">34</text></g>
+                        <g class="point-g" data-entry="35" data-num="35" role="button" tabindex="0"><circle cx="23" cy="91.5" r="0.45"/><text class="point-num" x="24" y="91.5">35</text></g>
+                        <g class="point-g" data-entry="36" data-num="36" role="button" tabindex="0"><circle cx="50" cy="85.5" r="0.45"/><text class="point-num" x="51" y="85.5">36</text></g>
+                        <g class="point-g" data-entry="37" data-num="37" role="button" tabindex="0"><circle cx="32.3" cy="94.5" r="0.45"/><text class="point-num" x="33.3" y="94.5">37</text></g>
+                        <g class="point-g" data-entry="38" data-num="38" role="button" tabindex="0"><circle cx="43" cy="94" r="0.45"/><text class="point-num" x="44" y="94">38</text></g>
+                        <g class="point-g" data-entry="39" data-num="39" role="button" tabindex="0"><circle cx="54" cy="97.5" r="0.45"/><text class="point-num" x="55" y="97.5">39</text></g>
+
+                    </svg>
+                </div>
+            </div>
+            <div class="network-point-tooltip" id="point-tooltip"></div>
+        </aside>
+
+        <main class="content-panel">
+            <div class="content-inner">
+            <img src="assets/text-rubik.png" alt="War On Women" class="title-image is-sr-only">
+
+            <section class="intro-block is-sr-only" data-entry="intro" aria-hidden="true">
+                <p class="ingress-citat">"Alla riskerar våld i konflikter, men vi är vana vid mäns berättelser."</p>
+                <p class="ingress-tes">Kvinnor drabbas av oförutsedda och brutala konsekvenser i krigstid, eftersom beredskapsdiskussionen saknar ett kvinnoperspektiv. Det här är vår samling av data och bilder ur ett kvinnligt perspektiv på krig.</p>
+            </section>
+
+                        <article class="fact" data-entry="1">
+                <h2 class="fact-title">En svensk kontextualisering</h2>
+                <p class="fact-body">
+                    Kvinnor är i större utsträckning mer oroade för väpnade konflikter än vad män är, 65 % i jämförelse med 53 %. 85 % av kvinnor tror att det kommer ske ett militärt angrepp mot Sverige, motsvarande 53 % av männen. I kombination med detta anser 74 % av personerna i undersökningen att säkerheten i Sverige minskat det senaste året.
+                </p>
+                <p class="fact-source">
+                    Myndigheten för psykologiskt försvar (2026). Årsredovisning 2025.
+                </p>
+            </article>
+
+                        <article class="fact" data-entry="2">
+                <h2 class="fact-title">En svensk kontextualisering</h2>
+                <p class="fact-body">
+                    “En majoritet (81 procent) anser att säkerheten i världen har minskat under det senaste året. Det är en ökning med 3 procentenheter sedan mätningen hösten 2024. Endast 8 procent anser att säkerheten i världen har ökat. Motsvarande siffra för nollmätningen var 7 procent.”
+                </p>
+                <p class="fact-source">
+                    Myndigheten för civilt försvar (2025). Effektmätning Broschyren Om krisen eller kriget kommer, 2024
+                </p>
+            </article>
+
+                        <article class="fact" data-entry="3">
+                <h2 class="fact-title">En svensk kontextualisering</h2>
+                <p class="fact-body">
+                    Kvinnor upplever att nyhetsrapporteringen kring det säkerhetspolitiska läget i Sverige har bidragit till en större oro.
+                </p>
+                <p class="fact-source">
+                    Myndigheten för civilt försvar (2024). Effektmätning: Medias nyhetsrapportering om att det kan bli krig i Sverige
+                </p>
+            </article>
+
+                        <article class="fact" data-entry="4">
+                <h2 class="fact-title">En svensk kontextualisering</h2>
+                <img src="assets/flyktfaglar.png" alt="Flyktfåglar, Marie-Louise Ekman, 2015" class="fact-image">
+                <p class="fact-source">Flyktfåglar, Marie-Louise Ekman, 2015</p>
+            </article>
+
+                        <article class="fact" data-entry="5">
+                <h2 class="fact-title">Maskulinitet och kvinnlighet i krig</h2>
+                <p class="fact-body">
+                    I krigstider blir patriarkala strukturer starkare, eftersom krigets form utgår från att männen är aggressiva och dominanta, och att kvinnor är passiva och ibland submissiva. Sådana strukturer kan i sin tur leda till sexuellt våld som en krigstaktik för att skapa makt över kvinnor.
+                </p>
+                <p class="fact-source">
+                    Myndigheten för civilt försvar (2025). Effektmätning Broschyren Om krisen eller kriget kommer, 2024 Myndigheten för civilt försvar (2024). Effektmätning: Medias nyhetsrapportering om att det kan bli krig i Sverige
+                </p>
+            </article>
+
+                        <article class="fact" data-entry="6">
+                <h2 class="fact-title">Maskulinitet och kvinnlighet i krig</h2>
+                <img src="assets/bild-7.png" alt="Untitled (You pledge allegiance to your dick and to the pussy for which it stands) (vänster) with Untitled (All violence is the illustration of a pathetic stereotype) (höger), Barbra Kruger, 1991" class="fact-image">
+                <p class="fact-source">Untitled (You pledge allegiance to your dick and to the pussy for which it stands) (vänster) with Untitled (All violence is the illustration of a pathetic stereotype) (höger), Barbra Kruger, 1991</p>
+            </article>
+
+                        <article class="fact" data-entry="7">
+                <h2 class="fact-title">Maskulinitet och kvinnlighet i krig</h2>
+                <p class="fact-body">
+                    Svenska kvinnor uppger i större utsträckning att de har planerat sin hemberedskap. Kvinnor talar även mer med andra om sin beredskap. De känner alltså i större utsträckning än män ansvar för sin och sina näras beredskap.
+                </p>
+                <p class="fact-source">
+                    United Nations Institute for Disarmament Research (2023). Addressing Weapons in Conflict-related Sexual Violence: The Arms Control and Disarmament Toolbox
+                </p>
+            </article>
+
+                        <article class="fact" data-entry="8">
+                <h2 class="fact-title">Maskulinitet och kvinnlighet i krig</h2>
+                <p class="fact-body">
+                    Samtidigt ser män sig själva som en del av Sveriges militära beredskap i större utsträckning än vad kvinnor gör, samt att de vet vad de förväntas göra i händelse av krig. Allt detta tyder på hur patriarkala strukturer blir starkare i krigstider, att kvinnor tänker på hemmet och sina näras beredskap, medan män har ett militärt intresse.
+                </p>
+                <p class="fact-source">
+                    Myndigheten för civilt försvar (2025). Effektmätning Broschyren Om krisen eller kriget kommer, 2024 Myndigheten för civilt försvar (2024). Effektmätning: Medias nyhetsrapportering om att det kan bli krig i Sverige
+                </p>
+            </article>
+
+                        <article class="fact" data-entry="9">
+                <h2 class="fact-title">Maskulinitet och kvinnlighet i krig</h2>
+                <p class="fact-body">
+                    “Men with patriarchal values are more likely to self-select into organized violence through participation in paramilitaries.”
+                </p>
+                <p class="fact-source">
+                    Elin Bjarnegård, Anders Engvall, Srisompob Jitpiromsri and Erik Melander. (2023) Armed Violence and Patriarchal Values: A Survey of Young Men in Thailand and Their Military Experiences. American Political Science Review
+                </p>
+            </article>
+
+                        <article class="fact" data-entry="10">
+                <h2 class="fact-title">Maskulinitet och kvinnlighet i krig</h2>
+                <img src="assets/bild-3.png" alt="Crucifixion, Gladys Hynes, 1939" class="fact-image">
+                <p class="fact-source">Crucifixion, Gladys Hynes, 1939</p>
+            </article>
+
+                        <article class="fact" data-entry="11">
+                <h2 class="fact-title">Våld i krig</h2>
+                <p class="fact-body">
+                    “Ju mer intensiv konflikten är i närområdet, desto större är risken att kvinnor också utsätts för våld av sina partners eller före detta partners.”
+                </p>
+                <p class="fact-source">
+                    Signe Svallfors (2021). Bodies and Battlefields: Sexual and Reproductive Health and Rights in the Colombian Armed Conflict. Stockholms Universitet. Stockholm.
+                </p>
+            </article>
+
+                        <article class="fact" data-entry="12">
+                <h2 class="fact-title">Våld i krig</h2>
+                <p class="fact-body">
+                    Krig förvärrar redan existerande strukturella förtryck. Kvinnor i krig utsätts ofta för våld av sina anhöriga som ett resultat av mäns upplevda maktlöshet och rädsla. Våldet infinner sig i såväl privata som offentliga miljöer och utförs av både militär och civila. Samtidigt begränsas kvinnors levnadsutrymme, frihet och tillgång till det offentliga rummet, något som skapar otrygghet.
+                </p>
+                <p class="fact-source">
+                    Linda Jolof, Patricia Rocca, Tommy Carlsson (2022). Mitt hjärtas syster: Upplevelser av krig, tortyr och/eller flykt bland kvinnor och interventioner anpassade för dem – en litteraturstudie. Röda Korsets kompetenscenter för tortyr- och krigsskaderehabilitering.
+                </p>
+            </article>
+
+                        <article class="fact" data-entry="13">
+                <h2 class="fact-title">Våld i krig</h2>
+                <img src="assets/bild-5.png" alt="To Be A Mother,To Lose A Child, Malak Mattar, 2025" class="fact-image">
+                <p class="fact-source">To Be A Mother,To Lose A Child, Malak Mattar, 2025</p>
+            </article>
+
+                        <article class="fact" data-entry="14">
+                <h2 class="fact-title">Våld och krig</h2>
+                <p class="fact-body">
+                    “Att leva i krig eller på flykt innebar även en ökad risk att utsättas för våld eller hot om våld inom familjen, i synnerhet från sina makar”
+                </p>
+                <p class="fact-source">
+                    -Linda Jolof, Patricia Rocca, Tommy Carlsson (2022). Mitt hjärtas syster: Upplevelser av krig, tortyr och/eller flykt bland kvinnor och interventioner anpassade för dem – en litteraturstudie. Röda Korsets kompetenscenter för tortyr- och krigsskaderehabilitering.
+                </p>
+            </article>
+
+                        <article class="fact" data-entry="15">
+                <h2 class="fact-title">Våld och krig</h2>
+                <p class="fact-body">
+                    Uppemot hälften av kvinnorna som befinner sig i konflikt- eller postkonfliktområden utsätts för sexuellt våld av sina partners och personer de inte har någon relation till, som militär, polis och hjälparbetare. Våldet uttrycks även på en strukturell nivå, genom bland annat fråntagna rättigheter.
+                </p>
+                <p class="fact-source">
+                    Linda Jolof, Patricia Rocca, Tommy Carlsson (2022). Mitt hjärtas syster: Upplevelser av krig, tortyr och/eller flykt bland kvinnor och interventioner anpassade för dem – en litteraturstudie. Röda Korsets kompetenscenter för tortyr- och krigsskaderehabilitering.
+                </p>
+            </article>
+
+                        <article class="fact" data-entry="16">
+                <h2 class="fact-title">Våld och krig</h2>
+                <p class="fact-body">
+                    “Redan befintliga patriarkala strukturer i samhället förstärktes i samband med den instabilitet som uppstod till följd av krig. En annan anledning kunde vara att kvinnor begränsades till följd av hur männen i deras närhet reagerade på situationen.”
+                </p>
+                <p class="fact-source">
+                    Linda Jolof, Patricia Rocca, Tommy Carlsson (2022). Mitt hjärtas syster: Upplevelser av krig, tortyr och/eller flykt bland kvinnor och interventioner anpassade för dem – en litteraturstudie. Röda Korsets kompetenscenter för tortyr- och krigsskaderehabilitering.
+                </p>
+            </article>
+
+                        <article class="fact" data-entry="17">
+                <h2 class="fact-title">Våld och krig</h2>
+                <p class="fact-body">
+                    “När en familj lyckas fly lägger män oftare det akuta hotet mot livet bakom sig, medan många kvinnor reser med det vid sin sida.”
+                </p>
+                <p class="fact-source">
+                    Linda Jolof, Patricia Rocca, Tommy Carlsson (2022). Mitt hjärtas syster: Upplevelser av krig, tortyr och/eller flykt bland kvinnor och interventioner anpassade för dem – en litteraturstudie. Röda Korsets kompetenscenter för tortyr- och krigsskaderehabilitering.
+                </p>
+            </article>
+
+                        <article class="fact" data-entry="18">
+                <h2 class="fact-title">Våld och krig</h2>
+                <img src="assets/bild-1.png" alt="Memorial for the Second Canadian Division in a Mine Crater near Neuville St. Vaast, Mary Riter Hamilton, ca 1920" class="fact-image">
+                <p class="fact-source">Memorial for the Second Canadian Division in a Mine Crater near Neuville St. Vaast, Mary Riter Hamilton, ca 1920</p>
+            </article>
+
+                        <article class="fact" data-entry="19">
+                <h2 class="fact-title">Våld och krig</h2>
+                <p class="fact-body">
+                    Civila kvinnor upplever samma traumatiska upplevelser som militära styrkor, såsom bombningar, attacker, m.m. Samtidigt som de exponeras för könsbaserad våld, som påtvingad graviditet, kidnappning, våldtäkt, sexuellt slaveri och prostitution.
+                </p>
+                <p class="fact-source">
+                    Stevanović, A., Frančišković, T. and Vermetten, E. (2016) Relationship of early-life trauma, war-related trauma, personality traits, and PTSD symptom severity: a retrospective study on female civilian victims of war. European Journal of Psychotraumatology, 7(1).
+                </p>
+            </article>
+
+                        <article class="fact" data-entry="20">
+                <h2 class="fact-title">Våld och krig</h2>
+                <p class="fact-body">
+                    Under 2024 var 1 av 5 kvinnor i åldern 20–24 gifta före 18 års ålder. Barngiftemål i konfliktzoner är 14 % högre än i icke-konfliktzoner.
+                </p>
+                <p class="fact-source">
+                    UN women (2025). Facts and figures: women, peace, and security.
+                </p>
+            </article>
+
+
+                        <article class="fact" data-entry="21">
+                <h2 class="fact-title">Våld och krig</h2>
+                <p class="fact-body">
+                    “Gender-based violence was assessed as severe or extreme in 22 of 25 countries that experienced humanitarian crises.”
+                </p>
+                <p class="fact-source">
+                    UN women (2025). Facts and figures: women, peace, and security.
+                </p>
+            </article>
+
+                        <article class="fact" data-entry="22">
+                <h2 class="fact-title">Våld och krig</h2>
+                <p class="fact-body">
+                    “Between 2023 and 2024, approximately four times more children and women were killed in armed conflicts compared with 2021-2022. The Office recorded 21,480 women and 16,690 children killed in conflicts during the 2023-2024 period, with 80% of child deaths and 70% of women's deaths recorded in Gaza alone.”
+                </p>
+                <p class="fact-source">
+                    UN (2025). UN data shows surge in civilian deaths in conflict globally, highlights pervasive discrimination
+                </p>
+            </article>
+
+                        <article class="fact" data-entry="23">
+                <h2 class="fact-title">Våld och krig</h2>
+                <p class="fact-body">
+                    Det civila dödstalet har ökat sedan 90-talet, med vissa siffror som pekar på att 90 % av alla krigsoffer är icke-militära.
+                </p>
+                <p class="fact-source">
+                    Stevanović, A., Frančišković, T. and Vermetten, E. (2016) Relationship of early-life trauma, war-related trauma, personality traits, and PTSD symptom severity: a retrospective study on female civilian victims of war. European Journal of Psychotraumatology, 7(1).
+                </p>
+            </article>
+
+                        <article class="fact" data-entry="24">
+                <h2 class="fact-title">Våld och krig</h2>
+                <p class="fact-body">
+                    “Civilian casualties among women and children quadrupled compared to the previous two-year period, and conflict-related sexual violence increased by 87 per cent in two years”
+                </p>
+                <p class="fact-source">
+                    UN women (2025). Wars on women escalate as global conflicts reach record highs.
+                </p>
+            </article>
+
+                        <article class="fact" data-entry="25">
+                <h2 class="fact-title">Våld och krig</h2>
+                <p class="fact-body">
+                    Sexuellt våld kan användas som ett vapen i krig. Terroristgrupper, andra väpnade grupper och kriminella nätverk använder sexuellt våld som en taktik för att incitamentera rekrytering och ta kontroll över territorier.
+                </p>
+                <p class="fact-source">
+                    UN women (2025). Facts and figures: women, peace, and security.
+                </p>
+            </article>
+
+                        <article class="fact" data-entry="26">
+                <h2 class="fact-title">Våld och krig</h2>
+                <img src="assets/bild-8.png" alt="Untitled (Who is free to choose?), Barbra Kruger, 1990" class="fact-image">
+                <p class="fact-source">Untitled (Who is free to choose?), Barbra Kruger, 1990</p>
+            </article>
+
+                        <article class="fact" data-entry="27">
+                <h2 class="fact-title">Våld och krig</h2>
+                <p class="fact-body">
+                    Under 2023 och 2024 fyrdubblades antalet kvinnor och barn som dödades i krig, i jämförelse med den tidigare tvåårsperioden. Och 7 av 10 kvinnor som dog i konflikter dödades i Gaza. I Ukraina var 31 % av de civila dödsoffren kvinnor och flickor.
+                </p>
+                <p class="fact-source">
+                    UN (2025). Women and peace and security.
+                </p>
+            </article>
+
+                        <article class="fact" data-entry="28">
+                <h2 class="fact-title">Våld och krig</h2>
+                <p class="fact-body">
+                    “In some places, girls account for nearly half of the victims of sexual violence.”
+                </p>
+                <p class="fact-source">
+                    UN (2025). Women and peace and security.
+                </p>
+            </article>
+
+                        <article class="fact" data-entry="29">
+                <h2 class="fact-title">Våld och krig</h2>
+                <p class="fact-body">
+                    I Afghanistan föder en tredjedel av kvinnorna utan professionell hjälp, och en kvinna dör varannan timme till följd av graviditetskomplikationer som hade kunnat motverkas genom enkel medicinsk hjälp. Staten har även beslutat att kvinnor inte ska kunna arbeta inom sjukvården, vilket kommer att hindra mer än 36 000 barnmorskor och mer än 2 800 sjuksköterskor från att arbeta inom de närmaste åren.
+                </p>
+                <p class="fact-source">
+                    UN (2025). Women and peace and security.
+                </p>
+            </article>
+
+                        <article class="fact" data-entry="30">
+                <h2 class="fact-title">Våld och krig</h2>
+                <p class="fact-body">
+                    “Women and girls of childbearing age are primary targets for reproductive harms such as forced pregnancy, enforced sterilization and forced marriage.”
+                </p>
+                <p class="fact-source">
+                    Hana Salma (2023). Addressing Weapons in Conflict-related Sexual Violence: The Arms Control and Disarmament Toolbox. UNIDIR.
+                </p>
+            </article>
+
+                        <article class="fact" data-entry="31">
+                <h2 class="fact-title">Våld och krig</h2>
+                <p class="fact-body">
+                    Barn utsätts för sexuellt våld i konflikter och kan vara mer utsatta för tvingad rekrytering som sexuella slavar och fruar. UN rapporterar att 98 % av de rapporterade fallen av sexuellt våld i konflikter bland barn var flickor. Sexuellt våld inom väpnade grupper siktar in sin på att rekrytera flicksoldater, som oftast rekryteras till “bush wives”.
+                </p>
+                <p class="fact-source">
+                    Hana Salma (2023). Addressing Weapons in Conflict-related Sexual Violence: The Arms Control and Disarmament Toolbox. UNIDIR.
+                </p>
+            </article>
+
+                        <article class="fact" data-entry="32">
+                <h2 class="fact-title">Våld och krig</h2>
+                <p class="fact-body">
+                    “Civilians also commit CRSV (conflict related sexual violence). In a survey of human rights abuses in eastern Democratic Republic of the Congo mining towns, women reported that “the most common perpetrators of rape and forced marriage were civilians, including mining bosses, neighbors, and family members”.”
+                </p>
+                <p class="fact-source">
+                    Hana Salma (2023). Addressing Weapons in Conflict-related Sexual Violence: The Arms Control and Disarmament Toolbox. UNIDIR.
+                </p>
+            </article>
+
+                        <article class="fact" data-entry="33">
+                <h2 class="fact-title">Våld och krig</h2>
+                <p class="fact-body">
+                    Våldtäkt kan användas som en strategi för att döda ett folk. Relationer slits sönder när kvinnor våldtas.
+                </p>
+                <p class="fact-source">
+                    Linda Jolof, Patricia Rocca, Tommy Carlsson (2022). Mitt hjärtas syster: Upplevelser av krig, tortyr och/eller flykt bland kvinnor och interventioner anpassade för dem – en litteraturstudie. Röda Korsets kompetenscenter för tortyr- och krigsskaderehabilitering.
+                </p>
+            </article>
+
+                        <article class="fact" data-entry="34">
+                <h2 class="fact-title">Diplomatisk och ekonomisk representation</h2>
+                <p class="fact-body">
+                    Mellan 2013 och 2023 ökade mediernas bevakning av krig mer än sexfaldigt, däremot fokuserade endast 5 % av artiklarna på kvinnors upplevelser i krig, och endast 0.04 % handlade om kvinnors ledarskap i fredsarbete.
+                </p>
+                <p class="fact-source">
+                    UN women (2025). Facts and figures: women, peace, and security.
+                </p>
+            </article>
+
+                        <article class="fact" data-entry="35">
+                <h2 class="fact-title">Diplomatisk och ekonomisk representation</h2>
+                <img src="assets/bild-4.png" alt="EMBROIDERED PAST, IMAGINED FUTURE IN CONGO, Lucie Kamuswekera" class="fact-image">
+                <p class="fact-source">EMBROIDERED PAST, IMAGINED FUTURE IN CONGO, Lucie Kamuswekera</p>
+            </article>
+
+                        <article class="fact" data-entry="36">
+                <h2 class="fact-title">Diplomatisk och ekonomisk representation</h2>
+                <p class="fact-body">
+                    “In 2024, women made up only 7 per cent of negotiators on average worldwide, and nearly 9 out of 10 negotiation tracks included no women negotiators at all. 18 In mediation roles, women were slightly better represented, averaging 14 per cent, but two thirds of mediation efforts did not include any woman mediator. Although women’s representation among signatories to peace agreements was comparatively higher in 2024, standing at 20 per cent of signatories, the five-year average remained low, at 11 per cent.”
+                </p>
+                <p class="fact-source">
+                    UN (2025). Women and peace and security.
+                </p>
+            </article>
+
+                        <article class="fact" data-entry="37">
+                <h2 class="fact-title">Diplomatisk och ekonomisk representation</h2>
+                <p class="fact-body">
+                    Kvinnor är fortsatt underrepresenterade i diplomatiska uppdrag. Från och med 2024 bestod endast 21 % av representantrollerna i UN av kvinnor.
+                </p>
+                <p class="fact-source">
+                    UN (2025). Women and peace and security.
+                </p>
+            </article>
+
+                        <article class="fact" data-entry="38">
+                <h2 class="fact-title">Diplomatisk och ekonomisk representation</h2>
+                <p class="fact-body">
+                    “There has been a noticeable drop in voluntary contributions at a time when support requested for peacebuilding and prevention efforts has increased. In 2024, the Fund approved $116 million (compared with $202 million in 2023), of which $49.9 million (43 per cent) was focused on supporting gender equality, compared to 95.8 million (47.3 per cent) in 2023.”
+                </p>
+                <p class="fact-source">
+                    UN (2025). Women and peace and security.
+                </p>
+            </article>
+
+                        <article class="fact" data-entry="39">
+                <h2 class="fact-title">Diplomatisk och ekonomisk representation</h2>
+                <img src="assets/bild-9.jpg" alt="Maintaining war graves, Olive Edis, 1919" class="fact-image">
+                <p class="fact-source">Maintaining war graves, Olive Edis, 1919</p>
+            </article>
+            <div class="outro-sentinel" aria-hidden="true"></div>
+
+            </div>
+            <div class="mute-wrap">
+                <button type="button" class="mute-btn" id="mute-btn" aria-label="Mute audio" title="Mute / Unmute"></button>
+                <span class="mute-label">Tysta</span>
+            </div>
+        </main>
+    </div>
+    <audio id="section-audio" preload="metadata"></audio>
+    <audio id="chapter-audio" preload="metadata" loop></audio>
+    <div class="outro-screen" aria-label="Avslutning">
+        <div class="outro-bg-video outro-bg-image" aria-hidden="true"></div>
+        <div class="outro-text">
+            <p class="outro-line">
+                Det finns tydliga mönster i kvinnors utsatthet i krig. Trots omfattande forskning saknas ett kvinnoperspektiv i Sveriges beredskapsarbete. Beredskapen behöver innefatta mer, Sverige behöver utbilda sin befolkning om de patriarkala riskerna i krig.
+            </p>
+        </div>
+        <div class="outro-footer-disclaimer" role="note">
+            Denna hemsida är ett studentarbete för kursen interaktiv design och visuell kommunikation med Peter Ström.<br> Vi äger inga rättigheter till typsnitt eller bilder.
+        </div>
+    </div>
+    <script>
+        (function () {
+            var facts = document.querySelectorAll('.fact[data-entry]');
+            var currentChapter = '';
+            var chapterDiv = null;
+            var chapterIndex = -1;
+            function normalizeChapterTitle(title) {
+                // En del titlar råkar ha en liten skillnad ("Våld i krig" vs "Våld och krig"),
+                // vilket annars skapar två separata kapitel och rubbar ljudmappningen.
+                var t = (title || '').trim();
+                if (t === 'Våld och krig') return 'Våld i krig';
+                return t;
+            }
+            var chapterMap = {
+                'Våld i krig': 'chapter--vald',
+                'Våld och krig': 'chapter--vald', // fallback om någon titel inte normaliseras
+                'En svensk kontextualisering': 'chapter--vald',
+                'Maskulinitet och kvinnlighet i krig': 'chapter--vald',
+                'Diplomatisk och ekonomisk representation': 'chapter--vald'
+            };
+
+            facts.forEach(function (fact) {
+                var entry = fact.getAttribute('data-entry');
+                if (!entry || entry === 'intro') return;
+
+                var num = document.createElement('span');
+                num.className = 'fact-num';
+                num.textContent = entry;
+                fact.insertBefore(num, fact.firstChild);
+
+                var titleEl = fact.querySelector('.fact-title');
+                if (titleEl) {
+                    var titleText = normalizeChapterTitle(titleEl.textContent.trim());
+                    if (titleText !== currentChapter) {
+                        currentChapter = titleText;
+                        chapterIndex++;
+                        chapterDiv = document.createElement('section');
+                        var baseClasses = 'chapter ' + (chapterMap[titleText] || '');
+                        var isDark = (chapterIndex % 2) === 1; // varannan: 0 ljus, 1 mörk, 2 ljus...
+                        chapterDiv.className = baseClasses + (isDark ? ' chapter--dark' : '');
+                        var heading = document.createElement('h2');
+                        heading.className = 'chapter-heading';
+                        heading.textContent = titleText;
+                        chapterDiv.appendChild(heading);
+                        fact.parentNode.insertBefore(chapterDiv, fact);
+                    }
+                    titleEl.style.display = 'none';
+                }
+                if (chapterDiv) chapterDiv.appendChild(fact);
+
+                var body = fact.querySelector('.fact-body');
+                if (!body) return;
+                var text = body.textContent.trim();
+                var isQuote = /^[\u201C\u201D\u0022\u2018\u2019]/.test(text);
+                if (isQuote) {
+                    fact.classList.add('fact--quote');
+                    if (text.length < 120) fact.classList.add('fact--quote-short');
+                    var hasSwedish = /[åäöÅÄÖ]/.test(text);
+                    if (!hasSwedish) fact.classList.add('fact--quote-en');
+                }
+            });
+
+            // Wrap words in redacted spans with placeholder symbols
+            var phPatterns = [
+                function (n) { return '(' + '.'.repeat(n) + ')'; },
+                function (n) { return '[' + '.'.repeat(n) + ']'; },
+                function (n) { return '.'.repeat(n); },
+                function (n) { return '(' + '\u2014' + ')'; },
+                function (n) { return '[' + '\u2014' + ']'; },
+                function (n) { return '\u2014'; }
+            ];
+            function makePlaceholder(word) {
+                var len = word.replace(/<[^>]*>/g, '').length;
+                if (len <= 1) return '.';
+                var fn;
+                if (len <= 3) {
+                    fn = phPatterns[Math.floor(Math.random() * 3) + 3];
+                } else {
+                    fn = phPatterns[Math.floor(Math.random() * 3)];
+                }
+                return fn(Math.max(2, Math.min(len, 8)));
+            }
+            function wrapWordsRedacted(el) {
+                var html = el.innerHTML;
+                el.innerHTML = html.replace(/(\S+)/g, function (m) {
+                    var ph = makePlaceholder(m);
+                    return '<span class="redacted" data-ph="' + ph + '">' + m + '</span>';
+                });
+            }
+            var chapters = document.querySelectorAll('.chapter');
+            chapters.forEach(function (ch) {
+                var bodies = ch.querySelectorAll('.fact-body');
+                bodies.forEach(function (body) {
+                    var poemLines = body.querySelectorAll('.poem-line');
+                    if (poemLines.length) {
+                        poemLines.forEach(function (line) { wrapWordsRedacted(line); });
+                    } else {
+                        wrapWordsRedacted(body);
+                    }
+                });
+            });
+
+            // Scroll-reveal — fade in via CSS class
+            var panel = document.querySelector('.content-panel');
+            var revealObs = new IntersectionObserver(function (entries) {
+                entries.forEach(function (e) {
+                    if (e.isIntersecting && e.intersectionRatio >= 0.15) {
+                        e.target.classList.add('revealed');
+                    }
+                });
+            }, { root: panel, threshold: [0.15] });
+            document.querySelectorAll('.chapter .fact').forEach(function (f) {
+                revealObs.observe(f);
+            });
+
+            // Avslutning: aktivera fullskärms night mode när man når slutet
+            var outroSentinel = document.querySelector('.outro-sentinel');
+            if (outroSentinel) {
+                var outroVideo = document.querySelector('.outro-bg-video');
+                var OUTRO_PLAYBACK_RATE = 7.0;
+                var outroObs = new IntersectionObserver(function (entries) {
+                    entries.forEach(function (e) {
+                        document.body.classList.toggle('outro-active', e.isIntersecting);
+                        if (outroVideo && outroVideo.tagName === 'VIDEO') {
+                            outroVideo.playbackRate = OUTRO_PLAYBACK_RATE;
+                            if (e.isIntersecting) outroVideo.play().catch(function () {});
+                        }
+                    });
+                }, { root: panel, threshold: [0] });
+                outroObs.observe(outroSentinel);
+            }
+
+            // Placera mute-knappen i vänstra hörnet av högerspalten
+            function updateNetworkPanelWidthVar() {
+                var net = document.querySelector('.network-panel');
+                if (!net) return;
+                var r = net.getBoundingClientRect();
+                document.documentElement.style.setProperty('--network-panel-w', Math.round(r.width) + 'px');
+            }
+            updateNetworkPanelWidthVar();
+            window.addEventListener('resize', updateNetworkPanelWidthVar);
+
+            // Invert layout during dark chapters
+            var layout = document.querySelector('.layout');
+            var darkChapters = document.querySelectorAll('.chapter--dark');
+            var visibleDark = new Set();
+            if (darkChapters.length) {
+                var invertObs = new IntersectionObserver(function (entries) {
+                    entries.forEach(function (e) {
+                        if (e.isIntersecting) visibleDark.add(e.target);
+                        else visibleDark.delete(e.target);
+                    });
+                    layout.classList.toggle('inverted', visibleDark.size > 0);
+                }, { root: panel, rootMargin: '-45% 0px -45% 0px', threshold: [0] });
+                darkChapters.forEach(function (ch) { invertObs.observe(ch); });
+            }
+
+            // (tidigare outro-overlay-beteende borttaget)
+
+        })();
+    </script>
+    <script>
+        (function () {
+            var startScreen = document.querySelector('.start-screen');
+            if (!startScreen) return;
+
+            var steps = Array.from(startScreen.querySelectorAll('[data-start-step]'));
+            var idx = 0;
+            var soundPrompt = document.getElementById('start-sound-prompt');
+            var titleContainer = document.getElementById('start-title');
+            var titleText = 'War on women';
+            var titleHasAnimated = false;
+            var jitterDone = new WeakSet();
+            var titleSoundTimer = null;
+
+            function isStepReady() {
+                var step = steps[idx];
+                if (!step) return false;
+                var name = step.getAttribute('data-start-step');
+                if (name === 'title') return titleContainer && titleContainer.getAttribute('data-anim-done') === '1';
+                var jitterEl = step.querySelector('[data-start-jitter]');
+                if (!jitterEl) return true;
+                return jitterEl.getAttribute('data-anim-done') === '1';
+            }
+
+            function runJitterEffect(container, opts) {
+                if (!container || jitterDone.has(container)) return;
+                jitterDone.add(container);
+                container.setAttribute('data-anim-done', '0');
+
+                var finalItalic = !!(opts && opts.finalItalic);
+                var scramble = !!(opts && opts.scramble);
+                var noRandomItalic = !!(opts && opts.noRandomItalic);
+                var scrambleEvery = (opts && typeof opts.scrambleEvery === 'number') ? opts.scrambleEvery : 6;
+                var scramblePortion = (opts && typeof opts.scramblePortion === 'number') ? opts.scramblePortion : 0.35;
+                var raw = container.innerHTML;
+
+                // Preserve <br> line breaks by turning into a sentinel during parsing.
+                var parts = raw.replace(/<br\s*\/?>/gi, '\n').split('');
+
+                container.innerHTML = '';
+                container.classList.add('visible');
+
+                var chars = [];
+                var originalChars = [];
+                // Wrap each word in an inline-block so the browser can't break mid-word.
+                var currentWord = null;
+                function ensureWord() {
+                    if (currentWord) return currentWord;
+                    currentWord = document.createElement('span');
+                    currentWord.className = 'start-jitter-word';
+                    container.appendChild(currentWord);
+                    return currentWord;
+                }
+                function endWord() {
+                    currentWord = null;
+                }
+
+                parts.forEach(function (ch) {
+                    if (ch === '\n') {
+                        container.appendChild(document.createElement('br'));
+                        endWord();
+                        return;
+                    }
+                    if (ch === ' ') {
+                        container.appendChild(document.createTextNode(' '));
+                        endWord();
+                        return;
+                    }
+                    var span = document.createElement('span');
+                    span.className = 'start-jitter-char';
+                    span.textContent = ch;
+                    ensureWord().appendChild(span);
+                    chars.push(span);
+                    originalChars.push(ch);
+                });
+
+                // Original: each letter has its own opacity speed factor (0.4x–2.0x)
+                var opacityFactors = chars.map(function () { return 0.4 + Math.random() * 1.6; });
+                var freezePoints = chars.map(function (_, index) {
+                    var t = index / Math.max(chars.length - 1, 1);
+                    return 0.2 + t * 0.6;
+                });
+                var frozen = chars.map(function () { return false; });
+
+                var animationStart = null;
+                var DURATION = 2000;
+                var tickCount = 0;
+
+                function jitter() {
+                    var now = performance.now();
+                    if (animationStart === null) animationStart = now;
+                    var progress = Math.min((now - animationStart) / DURATION, 1);
+
+                    chars.forEach(function (chEl, i) {
+                        if (!frozen[i]) return;
+                        chEl.style.fontStyle = finalItalic ? 'italic' : 'normal';
+                        chEl.style.transform = 'translateY(0)';
+                        chEl.style.filter = 'blur(0)';
+                        chEl.style.opacity = 1;
+                        chEl.textContent = originalChars[i];
+                    });
+
+                    var unfrozenIndices = [];
+                    var unfrozenChars = [];
+                    chars.forEach(function (_, i) {
+                        if (!frozen[i]) {
+                            unfrozenIndices.push(i);
+                            unfrozenChars.push(originalChars[i]);
+                        }
+                    });
+                    // Scramble only when enabled (otherwise keep characters stable to avoid layout jumps)
+                    // Mild mode: scramble less often and only a subset of characters.
+                    if (scramble) {
+                        tickCount++;
+                        if (tickCount % Math.max(1, scrambleEvery) === 0 && unfrozenChars.length > 1) {
+                            var portion = Math.max(0.05, Math.min(1, scramblePortion));
+                            if (portion >= 0.99) {
+                                // Original: full shuffle
+                                for (var j = unfrozenChars.length - 1; j > 0; j--) {
+                                    var k = Math.floor(Math.random() * (j + 1));
+                                    var tmp = unfrozenChars[j];
+                                    unfrozenChars[j] = unfrozenChars[k];
+                                    unfrozenChars[k] = tmp;
+                                }
+                            } else {
+                                var count = Math.max(2, Math.floor(unfrozenChars.length * portion));
+                                var picked = [];
+                                for (var pi = 0; pi < count; pi++) {
+                                    picked.push(Math.floor(Math.random() * unfrozenChars.length));
+                                }
+                                // Shuffle the picked characters among themselves
+                                for (var jj = picked.length - 1; jj > 0; jj--) {
+                                    var kk = Math.floor(Math.random() * (jj + 1));
+                                    var a = picked[jj], b = picked[kk];
+                                    var ttmp = unfrozenChars[a];
+                                    unfrozenChars[a] = unfrozenChars[b];
+                                    unfrozenChars[b] = ttmp;
+                                }
+                            }
+                        }
+                    }
+
+                    unfrozenIndices.forEach(function (pos, n) {
+                        var chEl = chars[pos];
+                        var baseChar = scramble ? unfrozenChars[n] : originalChars[pos];
+                        chEl.textContent = baseChar === ' ' ? '\u00A0' : baseChar;
+                        // Titel-animationen ska inte referera till quote-jitter-flaggor.
+                        // Håll normal stil så animationen inte kan fallera.
+                        chEl.style.fontStyle = 'normal';
+                        chEl.style.transform = 'translateY(0)';
+                        chEl.style.filter = 'blur(' + (Math.random() > 0.85 ? 1 : 0) + 'px)';
+                        var factor = opacityFactors[pos];
+                        var letterProgress = Math.min(progress * factor, 1);
+                        chEl.style.opacity = letterProgress;
+
+                        if (progress >= freezePoints[pos]) {
+                            frozen[pos] = true;
+                            chEl.style.fontStyle = finalItalic ? 'italic' : 'normal';
+                            chEl.style.transform = 'translateY(0)';
+                            chEl.style.filter = 'blur(0)';
+                            chEl.style.opacity = 1;
+                            chEl.textContent = originalChars[pos];
+                        }
+                    });
+                }
+
+                var intervalId = setInterval(jitter, 50);
+                setTimeout(function () {
+                    clearInterval(intervalId);
+                    chars.forEach(function (chEl, i) {
+                        frozen[i] = true;
+                        chEl.style.fontStyle = finalItalic ? 'italic' : 'normal';
+                        chEl.style.transform = 'translateY(0)';
+                        chEl.style.filter = 'blur(0)';
+                        chEl.style.opacity = 1;
+                        chEl.textContent = originalChars[i];
+                    });
+                    container.setAttribute('data-anim-done', '1');
+                }, DURATION);
+            }
+
+            function setActiveStep(nextIdx) {
+                idx = Math.max(0, Math.min(steps.length - 1, nextIdx));
+                steps.forEach(function (el, i) { el.classList.toggle('is-active', i === idx); });
+                var stepName = steps[idx] && steps[idx].getAttribute('data-start-step');
+                if (soundPrompt) soundPrompt.classList.remove('is-visible');
+                if (titleSoundTimer) { clearTimeout(titleSoundTimer); titleSoundTimer = null; }
+
+                if (stepName === 'quote') {
+                    // Original scramble for quote
+                    runJitterEffect(startScreen.querySelector('[data-start-jitter="quote"]'), { finalItalic: false, noRandomItalic: true, scramble: true, scrambleEvery: 1, scramblePortion: 1 });
+                } else if (stepName === 'thesis') {
+                    // Mild scramble for thesis (less reflow)
+                    runJitterEffect(startScreen.querySelector('[data-start-jitter="thesis"]'), { scramble: true, scrambleEvery: 6, scramblePortion: 0.28 });
+                } else if (stepName === 'title') {
+                    startTitleEffect();
+                    titleSoundTimer = setTimeout(function () {
+                        if (soundPrompt) soundPrompt.classList.add('is-visible');
+                    }, 2000);
+                }
+            }
+
+            function startTitleEffect() {
+                if (titleHasAnimated || !titleContainer) return;
+                titleHasAnimated = true;
+                titleContainer.setAttribute('data-anim-done', '0');
+
+                titleContainer.innerHTML = '';
+                titleContainer.classList.add('visible');
+
+                var chars = [];
+                var originalChars = titleText.split('');
+                originalChars.forEach(function (ch) {
+                    var span = document.createElement('span');
+                    span.className = 'start-title-char';
+                    span.textContent = ch === ' ' ? '\u00A0' : ch;
+                    titleContainer.appendChild(span);
+                    chars.push(span);
+                });
+
+                titleContainer.classList.add('visible');
+
+                // Original: each letter has its own opacity speed factor (0.4x–2.0x)
+                var opacityFactors = chars.map(function () { return 0.4 + Math.random() * 1.6; });
+                var freezePoints = chars.map(function (_, index) {
+                    var t = index / Math.max(chars.length - 1, 1);
+                    return 0.2 + t * 0.6; // 0.2 → 0.8
+                });
+                var frozen = chars.map(function () { return false; });
+
+                var animationStart = null;
+                var DURATION = 2000;
+                var tickCount = 0;
+
+                function jitter() {
+                    var now = performance.now();
+                    if (animationStart === null) animationStart = now;
+                    var progress = Math.min((now - animationStart) / DURATION, 1);
+
+                    // keep frozen letters fixed
+                    chars.forEach(function (chEl, i) {
+                        if (!frozen[i]) return;
+                        chEl.style.fontFamily = "'Syncro Mono', monospace";
+                        chEl.style.fontStyle = 'normal';
+                        chEl.style.transform = 'translateY(0)';
+                        chEl.style.filter = 'blur(0)';
+                        chEl.style.opacity = 1;
+                        chEl.textContent = originalChars[i] === ' ' ? '\u00A0' : originalChars[i];
+                    });
+
+                    // collect unfrozen indices/chars, shuffle them
+                    var unfrozenIndices = [];
+                    var unfrozenChars = [];
+                    chars.forEach(function (_, i) {
+                        if (!frozen[i]) {
+                            unfrozenIndices.push(i);
+                            unfrozenChars.push(originalChars[i]);
+                        }
+                    });
+                    for (var j = unfrozenChars.length - 1; j > 0; j--) {
+                        var k = Math.floor(Math.random() * (j + 1));
+                        var tmp = unfrozenChars[j];
+                        unfrozenChars[j] = unfrozenChars[k];
+                        unfrozenChars[k] = tmp;
+                    }
+
+                    unfrozenIndices.forEach(function (pos, n) {
+                        var chEl = chars[pos];
+                        var baseChar = unfrozenChars[n];
+                        chEl.textContent = baseChar === ' ' ? '\u00A0' : baseChar;
+                        chEl.style.fontStyle = 'normal';
+                        chEl.style.transform = 'translateY(0)';
+                        chEl.style.filter = 'blur(' + (Math.random() > 0.85 ? 1 : 0) + 'px)';
+                        var factor = opacityFactors[pos];
+                        var letterProgress = Math.min(progress * factor, 1);
+                        chEl.style.opacity = letterProgress;
+
+                        if (progress >= freezePoints[pos]) {
+                            frozen[pos] = true;
+                            chEl.style.fontFamily = "'Syncro Mono', monospace";
+                            chEl.style.fontStyle = 'normal';
+                            chEl.style.transform = 'translateY(0)';
+                            chEl.style.filter = 'blur(0)';
+                            chEl.style.opacity = 1;
+                            chEl.textContent = originalChars[pos] === ' ' ? '\u00A0' : originalChars[pos];
+                        }
+                    });
+                }
+
+                var intervalId = setInterval(jitter, 50);
+                setTimeout(function () {
+                    clearInterval(intervalId);
+                    chars.forEach(function (chEl, i) {
+                        frozen[i] = true;
+                        chEl.style.fontFamily = "'Syncro Mono', monospace";
+                        chEl.style.fontStyle = 'normal';
+                        chEl.style.transform = 'translateY(0)';
+                        chEl.style.filter = 'blur(0)';
+                        chEl.style.opacity = 1;
+                        chEl.textContent = originalChars[i] === ' ' ? '\u00A0' : originalChars[i];
+                    });
+                    titleContainer.setAttribute('data-anim-done', '1');
+                }, DURATION);
+            }
+
+            function closeStart() {
+                document.body.classList.remove('start-active');
+            }
+
+            function next() {
+                if (idx >= steps.length - 1) return;
+                setActiveStep(idx + 1);
+            }
+
+            function maybeAdvance() {
+                if (!isStepReady()) return;
+                if (idx >= steps.length - 1) closeStart();
+                else next();
+            }
+
+            // open on entry
+            document.body.classList.add('start-active');
+            setActiveStep(0);
+
+            // click-through (except on sound step buttons)
+            startScreen.addEventListener('click', function (e) {
+                maybeAdvance();
+            });
+            startScreen.addEventListener('wheel', function (e) {
+                e.preventDefault();
+                maybeAdvance();
+            }, { passive: false });
+            window.addEventListener('keydown', function (e) {
+                if (!document.body.classList.contains('start-active')) return;
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    maybeAdvance();
+                }
+                if (e.key === 'Escape') closeStart();
+            });
+        })();
+
+        (function () {
+            var btn = document.getElementById('mute-btn');
+            var sectionAudio = document.getElementById('section-audio');
+            var chapterAudio = document.getElementById('chapter-audio');
+            var muted = false;
+            function updateBtn() {
+                btn.classList.toggle('is-muted', muted);
+                btn.setAttribute('aria-pressed', muted ? 'true' : 'false');
+                if (sectionAudio) sectionAudio.muted = muted;
+                if (chapterAudio) chapterAudio.muted = muted;
+            }
+            window.__setMuted = function (nextMuted) {
+                muted = !!nextMuted;
+                updateBtn();
+            };
+            btn.addEventListener('click', function () {
+                muted = !muted;
+                updateBtn();
+            });
+            updateBtn();
+        })();
+
+        (function () {
+            var contentPanel = document.querySelector('.content-panel');
+            var contentInner = document.querySelector('.content-inner');
+            var audio = document.getElementById('section-audio');        // voiceover per stycke
+            var chapterAudio = document.getElementById('chapter-audio'); // ambience per kapitel
+            if (!contentPanel || !contentInner || !audio || !chapterAudio) return;
+            var facts = contentInner.querySelectorAll('.fact');
+            var activeEntry = null;
+            var hasInteracted = false;
+            var pendingEntry = null;
+
+            // Map data-entry -> voiceover index (1..N), skipping image facts.
+            var voiceoverIndexByEntry = {};
+            (function buildVoiceoverMap() {
+                var idx = 0;
+                Array.from(facts).forEach(function (fact) {
+                    var entry = fact.getAttribute('data-entry');
+                    if (!entry || entry === 'intro') return;
+                    if (fact.querySelector('.fact-image')) return; // skip images
+                    if (!fact.querySelector('.fact-body')) return; // only text facts
+                    idx++;
+                    voiceoverIndexByEntry[entry] = String(idx);
+                });
+            })();
+            // (5 och 7: ingen manuell swap — ljudnumreringen följer DOM-ordningen.)
+
+            // Chapter ambience mapping: intro, kapitel 1-4, outro
+            var ambienceSrc = {
+                intro: 'sounds/amb-2-ch1.mp3',
+                outro: 'sounds/amb-1-intro.mp3',
+                ch1: 'sounds/amb-2-ch1.mp3',
+                ch2: 'sounds/amb-3-ch2.mp3',
+                ch3: 'sounds/amb-4-ch3.mp3',
+                ch4: 'sounds/amb-5-ch4.mp3'
+            };
+            var currentAmbienceKey = 'intro';
+            // Mix
+            var VOICE_VOL = 1.0;
+            var AMB_VOL = 0.22;
+            function ambienceVolumeFor(key) {
+                // Höj volymen lite extra i våld-i-krig-kapitlet (ch3)
+                return key === 'ch3' ? 0.35 : AMB_VOL;
+            }
+            function currentAmbienceVolume() {
+                return ambienceVolumeFor(currentAmbienceKey);
+            }
+            audio.volume = VOICE_VOL;
+            chapterAudio.volume = currentAmbienceVolume();
+            chapterAudio.loop = false; // we'll loop manually with fade
+            audio.loop = false;
+            var ambienceSwitchToken = 0;
+            var ambLoopToken = 0;
+
+            function startAmbienceSoftLoop() {
+                // Under "autoplay/bara bakgrund" använder vi native loop (för att undvika att
+                // upprepade play()-calls blockeras av webbläsaren utan user interaction).
+                if (chapterAudio.loop) return;
+                ambLoopToken++;
+                var token = ambLoopToken;
+                var FADE_MS = 1600;
+                var CHECK_MS = 120;
+                var hasFadedOut = false;
+                function tick() {
+                    if (token !== ambLoopToken) return;
+                    if (!hasInteracted) { setTimeout(tick, CHECK_MS); return; }
+                    if (chapterAudio.paused || !isFinite(chapterAudio.duration) || chapterAudio.duration <= 0) {
+                        setTimeout(tick, CHECK_MS);
+                        return;
+                    }
+                    var remain = (chapterAudio.duration - chapterAudio.currentTime) * 1000;
+                    if (!hasFadedOut && remain <= FADE_MS) {
+                        hasFadedOut = true;
+                        var v0 = chapterAudio.volume;
+                        var t0 = Date.now();
+                        (function fadeDown() {
+                            if (token !== ambLoopToken) return;
+                            var p = Math.min(1, (Date.now() - t0) / FADE_MS);
+                            chapterAudio.volume = v0 * (1 - p);
+                            if (p < 1) requestAnimationFrame(fadeDown);
+                        })();
+                    }
+                    setTimeout(tick, CHECK_MS);
+                }
+                chapterAudio.addEventListener('ended', function () {
+                    if (token !== ambLoopToken) return;
+                    hasFadedOut = false;
+                    chapterAudio.currentTime = (currentAmbienceKey === 'ch3') ? 10 : 0;
+                    chapterAudio.volume = 0;
+                    chapterAudio.play().catch(function () {});
+                    var t0 = Date.now();
+                    (function fadeUp() {
+                        if (token !== ambLoopToken) return;
+                        var p = Math.min(1, (Date.now() - t0) / FADE_MS);
+                        chapterAudio.volume = currentAmbienceVolume() * p;
+                        if (p < 1) requestAnimationFrame(fadeUp);
+                    })();
+                });
+                tick();
+            }
+
+            function setChapterAmbience(key) {
+                if (currentAmbienceKey === key) return;
+                currentAmbienceKey = key;
+                var src = ambienceSrc[key] || ambienceSrc.intro;
+                if (!hasInteracted) {
+                    // Undvik att ladda om ljudet när vi bara "förlyssnar" (intro/citat/tes/titel).
+                    // Vi väntar tills voiceover aktiveras innan vi gör faktiska byten.
+                    var isPlaying = (chapterAudio && !chapterAudio.paused && chapterAudio.currentTime > 0);
+                    if (!isPlaying) chapterAudio.src = src;
+                    return;
+                }
+
+                ambienceSwitchToken++;
+                var token = ambienceSwitchToken;
+
+                var startVol = chapterAudio.volume;
+                var t0 = Date.now();
+                function fadeOut() {
+                    if (token !== ambienceSwitchToken) return;
+                    var p = Math.min(1, (Date.now() - t0) / 220);
+                    chapterAudio.volume = startVol * (1 - p);
+                    if (p < 1) requestAnimationFrame(fadeOut);
+                    else {
+                        if (token !== ambienceSwitchToken) return;
+                        chapterAudio.pause();
+                        chapterAudio.currentTime = 0;
+                        chapterAudio.src = src;
+                        chapterAudio.load();
+                        chapterAudio.volume = 0;
+                        if (key === 'ch3') {
+                            chapterAudio.addEventListener('loadedmetadata', function ch3Start() {
+                                chapterAudio.removeEventListener('loadedmetadata', ch3Start);
+                                chapterAudio.currentTime = 10;
+                            }, { once: true });
+                        }
+                        chapterAudio.play().catch(function () {});
+                        startAmbienceSoftLoop();
+                        var t1 = Date.now();
+                        function fadeIn() {
+                            if (token !== ambienceSwitchToken) return;
+                            var q = Math.min(1, (Date.now() - t1) / 500);
+                            chapterAudio.volume = ambienceVolumeFor(key) * q;
+                            if (q < 1) requestAnimationFrame(fadeIn);
+                        }
+                        fadeIn();
+                    }
+                }
+                fadeOut();
+            }
+
+            function computeChapterOrder() {
+                var headings = Array.from(document.querySelectorAll('.chapter-heading'));
+                var unique = [];
+                headings.forEach(function (h) {
+                    var t = h.textContent.trim();
+                    if (unique.indexOf(t) === -1) unique.push(t);
+                });
+                return unique;
+            }
+            var chapterTitles = computeChapterOrder();
+            function keyForChapterTitle(title) {
+                var t = (title || '').trim();
+                // Lås ljud för "Våld i krig" (inkl. varianten "Våld och krig")
+                // så att kapitlets ambience inte rubbas av tidigare uppdelningar.
+                if (t === 'Våld i krig' || t === 'Våld och krig') return 'ch3';
+
+                var idx = chapterTitles.indexOf(t);
+                return ['ch1', 'ch2', 'ch3', 'ch4'][idx] || 'ch4';
+            }
+
+            function onInteraction(enableVoice) {
+                // enableVoice=true: startar både bakgrund och uppläsning (som innan).
+                // enableVoice=false: startar bara bakgrund (så att voiceover inte triggas).
+                var wantVoice = (enableVoice !== false);
+
+                // Om uppläsning redan är aktiverad ska vi inte (oavsett flagga) starta om bakgrundsljudet.
+                if (hasInteracted) return;
+
+                var desiredSrc = ambienceSrc[currentAmbienceKey] || ambienceSrc.intro;
+                var isPlaying = (chapterAudio && !chapterAudio.paused && chapterAudio.currentTime > 0);
+                var srcMatches = (chapterAudio && chapterAudio.src && chapterAudio.src.indexOf(desiredSrc) !== -1);
+
+                // Om bakgrundsljudet redan spelas: gör inget nytt vid "autoplay-försök".
+                if (!wantVoice && isPlaying) return;
+
+                // Om vi redan spelar exakt rätt bakgrund och bara ska aktivera voiceover: undvik att ladda om ljudet.
+                if (wantVoice && isPlaying && srcMatches) {
+                    // Växla till mjuk loop när user interaction väl finns.
+                    chapterAudio.loop = false;
+                    startAmbienceSoftLoop();
+                    hasInteracted = true;
+                    if (pendingEntry) {
+                        var p = pendingEntry;
+                        pendingEntry = null;
+                        playForEntry(p);
+                    }
+                    return;
+                }
+
+                chapterAudio.src = desiredSrc;
+                chapterAudio.load();
+                chapterAudio.volume = 0;
+
+                chapterAudio.play().then(function () {
+                    if (currentAmbienceKey === 'ch3') chapterAudio.currentTime = 10;
+                    // Pre-interaction: loopa nativt för att slippa nya play()-calls.
+                    if (!wantVoice) {
+                        chapterAudio.loop = true;
+                    } else {
+                        chapterAudio.loop = false;
+                        startAmbienceSoftLoop();
+                    }
+                    var t0 = Date.now();
+                    (function fadeUp() {
+                        var p = Math.min(1, (Date.now() - t0) / 700);
+                        chapterAudio.volume = currentAmbienceVolume() * p;
+                        if (p < 1) requestAnimationFrame(fadeUp);
+                    })();
+
+                    if (!wantVoice) return;
+
+                    hasInteracted = true;
+                    if (pendingEntry) {
+                        var p = pendingEntry;
+                        pendingEntry = null;
+                        playForEntry(p);
+                    }
+                }).catch(function () {
+                    // Autoplay may be blocked until the user interacts.
+                    // When wantVoice=false we just keep waiting for user interaction.
+                });
+            }
+            contentPanel.addEventListener('scroll', onInteraction, { passive: true });
+            // Start audio only when user interacts with the content panel,
+            // not when clicking through the start screen overlay.
+            contentPanel.addEventListener('click', onInteraction, { once: true });
+            // If autoplay is blocked, allow the first user click on start overlay to start ambience only.
+            var startScreenEl = document.querySelector('.start-screen');
+            if (startScreenEl) {
+                startScreenEl.addEventListener('click', function () { onInteraction(false); }, { once: true });
+            }
+            // Try to start intro ambience right away (may still be blocked by browser).
+            setTimeout(function () { onInteraction(false); }, 200);
+
+            // Observe intro + chapters + outro sentinel for ambience switching
+            var introNode = document.querySelector('.intro-block');
+            var outroNode = document.querySelector('.outro-sentinel');
+            var chapters = Array.from(document.querySelectorAll('.chapter'));
+            var ambVisible = new Map();
+            var ambCurrentTarget = null;
+            var ambObs = new IntersectionObserver(function (entries) {
+                entries.forEach(function (e) {
+                    if (e.isIntersecting) ambVisible.set(e.target, e.intersectionRatio || 0);
+                    else ambVisible.delete(e.target);
+                });
+
+                var best = null;
+                var bestRatio = 0;
+                ambVisible.forEach(function (ratio, el) {
+                    if (ratio >= bestRatio) { bestRatio = ratio; best = el; }
+                });
+                if (!best) return;
+                if (best === ambCurrentTarget) return;
+                ambCurrentTarget = best;
+
+                if (introNode && best === introNode) setChapterAmbience('intro');
+                else if (outroNode && best === outroNode) setChapterAmbience('outro');
+                else {
+                    var heading = best.querySelector('.chapter-heading');
+                    var t = heading ? heading.textContent.trim() : '';
+                    setChapterAmbience(keyForChapterTitle(t));
+                }
+            }, { root: contentPanel, threshold: [0, 0.15, 0.3, 0.5, 0.75], rootMargin: '-35% 0px -35% 0px' });
+            if (introNode) ambObs.observe(introNode);
+            chapters.forEach(function (ch) { ambObs.observe(ch); });
+            if (outroNode) ambObs.observe(outroNode);
+            function playForEntry(entry) {
+                var voiceId = voiceoverIndexByEntry[entry];
+                if (!voiceId) return;
+                if (!hasInteracted) { pendingEntry = entry; return; }
+                if (activeEntry === entry) return;
+                activeEntry = entry;
+                var exts = ['mp3', 'm4a', 'wav', 'aiff', 'flac', 'ogg'];
+                // Primary: sequential voiceover id (skipping images).
+                // Fallback: data-entry id (in case files were named per punktnummer).
+                var candidates = [String(voiceId), String(entry)].filter(function (v, i, a) { return a.indexOf(v) === i; });
+                var candIdx = 0;
+                var extIdx = 0;
+                function tryNext() {
+                    if (candIdx >= candidates.length) return;
+                    if (extIdx >= exts.length) { candIdx++; extIdx = 0; return tryNext(); }
+                    audio.src = 'sounds/' + candidates[candIdx] + '.' + exts[extIdx];
+                    extIdx++;
+                    audio.load();
+                    audio.play().catch(tryNext);
+                }
+                audio.pause();
+                tryNext();
+            }
+            function stopPlayback() {
+                audio.pause();
+                activeEntry = null;
+            }
+            var observer = new IntersectionObserver(function (entries) {
+                entries.forEach(function (entry) {
+                    var el = entry.target;
+                    var id = el.getAttribute('data-entry');
+                    if (!id || id === 'intro') return;
+                    if (entry.isIntersecting && entry.intersectionRatio >= 0.25) {
+                        playForEntry(id);
+                    } else if (entry.intersectionRatio < 0.15 && activeEntry === id) {
+                        stopPlayback();
+                    }
+                });
+            }, { root: contentPanel, threshold: [0.15, 0.25, 0.5] });
+            facts.forEach(function (f) { observer.observe(f); });
+
+            // Positionera källor så de startar vid näst sista raden,
+            // även när källan är längre än texten (den får löpa längre ner).
+            function positionSources() {
+                facts.forEach(function (fact) {
+                    if (fact.querySelector('.fact-image')) return; // bilder: källa under bilden
+                    var body = fact.querySelector('.fact-body');
+                    var source = fact.querySelector('.fact-source');
+                    if (!body || !source) return;
+
+                    var cs = window.getComputedStyle(body);
+                    var lh = parseFloat(cs.lineHeight);
+                    if (!isFinite(lh) || lh <= 0) lh = 12;
+
+                    var target = Math.max(0, body.offsetHeight - (2 * lh));
+                    source.style.marginTop = target.toFixed(0) + 'px';
+                });
+            }
+            positionSources();
+            window.addEventListener('resize', positionSources);
+        })();
+
+        (function () {
+            var tooltip = document.getElementById('point-tooltip');
+            var points = document.querySelectorAll('.network-points-svg .point-g');
+            var contentPanel = document.querySelector('.content-panel');
+            var contentInner = document.querySelector('.content-inner');
+            if (!tooltip || !points.length) return;
+
+            var progressFill = document.querySelector('.network-progress-fill');
+            function updateProgress() {
+                if (!contentPanel) return;
+                var max = Math.max(1, contentPanel.scrollHeight - contentPanel.clientHeight);
+                var p = Math.max(0, Math.min(1, contentPanel.scrollTop / max));
+                if (progressFill) progressFill.style.setProperty('--net-progress', p.toFixed(4));
+            }
+            if (contentPanel && progressFill) {
+                contentPanel.addEventListener('scroll', updateProgress, { passive: true });
+                window.addEventListener('resize', updateProgress);
+                updateProgress();
+            }
+
+            var pointByEntry = {};
+            points.forEach(function (g) {
+                var e = g.getAttribute('data-entry');
+                if (e) pointByEntry[e] = g;
+            });
+
+            // Highlight the dot that best matches current scroll position
+            if (contentPanel && contentInner) {
+                var facts = Array.from(contentInner.querySelectorAll('.fact[data-entry]')).filter(function (f) {
+                    var id = f.getAttribute('data-entry');
+                    return id && id !== 'intro';
+                });
+
+                facts.sort(function (a, b) {
+                    var av = Number(a.getAttribute('data-entry'));
+                    var bv = Number(b.getAttribute('data-entry'));
+                    return av - bv;
+                });
+
+                var indexById = {};
+                facts.forEach(function (f, i) {
+                    indexById[f.getAttribute('data-entry')] = i;
+                });
+
+                var active = null;
+                var activeIndex = -1;
+                var direction = 1; // 1 = ner, -1 = upp
+                var lastScrollTop = contentPanel.scrollTop;
+
+                function setActive(entry) {
+                    if (active === entry) return;
+                    if (active && pointByEntry[active]) pointByEntry[active].classList.remove('is-active');
+                    active = entry;
+                    activeIndex = indexById[active];
+                    if (active && pointByEntry[active]) pointByEntry[active].classList.add('is-active');
+                }
+
+                function markerY() {
+                    var panelRect = contentPanel.getBoundingClientRect();
+                    return panelRect.top + (contentPanel.clientHeight * 0.35);
+                }
+
+                function centerY(fact) {
+                    var r = fact.getBoundingClientRect();
+                    return r.top + (r.height / 2);
+                }
+
+                function pickInitial() {
+                    if (!facts.length) return;
+                    var mY = markerY();
+                    var bestId = null;
+                    var bestDist = Infinity;
+                    facts.forEach(function (f) {
+                        var id = f.getAttribute('data-entry');
+                        var d = Math.abs(centerY(f) - mY);
+                        if (d < bestDist) { bestDist = d; bestId = id; }
+                    });
+                    if (bestId) setActive(bestId);
+                }
+
+                var ticking = false;
+                function updateActive() {
+                    if (!facts.length) return;
+
+                    var scTop = contentPanel.scrollTop;
+                    if (scTop > lastScrollTop + 2) direction = 1;
+                    else if (scTop < lastScrollTop - 2) direction = -1;
+                    lastScrollTop = scTop;
+
+                    if (!active || activeIndex < 0) {
+                        pickInitial();
+                    }
+                    if (!active || activeIndex < 0) return;
+
+                    var mY = markerY();
+                    var BUFFER_PX = 4; // undvik fladdrande byte exakt på mittlinjen
+
+                    // Flytta "lampan" framåt/bakåt baserat på riktning och mittpunkt.
+                    while (direction === 1 && activeIndex < facts.length - 1) {
+                        var nextFact = facts[activeIndex + 1];
+                        var boundary = (centerY(facts[activeIndex]) + centerY(nextFact)) / 2;
+                        if (mY >= boundary + BUFFER_PX) {
+                            setActive(nextFact.getAttribute('data-entry'));
+                        } else {
+                            break;
+                        }
+                    }
+
+                    while (direction === -1 && activeIndex > 0) {
+                        var prevFact = facts[activeIndex - 1];
+                        var boundary2 = (centerY(facts[activeIndex]) + centerY(prevFact)) / 2;
+                        if (mY <= boundary2 - BUFFER_PX) {
+                            setActive(prevFact.getAttribute('data-entry'));
+                        } else {
+                            break;
+                        }
+                    }
+                }
+
+                function requestUpdate() {
+                    if (ticking) return;
+                    ticking = true;
+                    requestAnimationFrame(function () {
+                        ticking = false;
+                        updateActive();
+                    });
+                }
+
+                pickInitial();
+                contentPanel.addEventListener('scroll', requestUpdate, { passive: true });
+                window.addEventListener('resize', requestUpdate);
+            }
+
+            points.forEach(function (g) {
+                var entry = g.getAttribute('data-entry');
+                var fact = contentInner && contentInner.querySelector('.fact[data-entry="' + entry + '"]');
+                var titleEl = fact && fact.querySelector('.fact-title');
+                if (titleEl) g.setAttribute('data-title', titleEl.textContent.trim());
+                g.setAttribute('aria-label', 'Punkt ' + entry + (titleEl ? ': ' + titleEl.textContent.trim() : ''));
+                g.addEventListener('mouseenter', function () {
+                    tooltip.textContent = g.getAttribute('data-title') || '';
+                    tooltip.classList.add('visible');
+                    g.classList.add('is-hovered');
+                    var numEl = g.querySelector('.point-num');
+                    if (numEl) {
+                        requestAnimationFrame(function () {
+                            var nr = numEl.getBoundingClientRect();
+                            tooltip.style.left = nr.left + 'px';
+                            var box = tooltip.getBoundingClientRect();
+                            tooltip.style.top = (nr.top + (nr.height / 2) - (box.height / 2)) + 'px';
+                        });
+                    }
+                });
+                g.addEventListener('mouseleave', function () {
+                    tooltip.classList.remove('visible');
+                    g.classList.remove('is-hovered');
+                });
+                g.addEventListener('click', function () {
+                    if (!contentPanel || !contentInner) return;
+                    var target = contentInner.querySelector('.fact[data-entry="' + entry + '"]');
+                    if (!target) return;
+                    var panelRect = contentPanel.getBoundingClientRect();
+                    var targetRect = target.getBoundingClientRect();
+                    var scrollTop = contentPanel.scrollTop + (targetRect.top - panelRect.top) - 24;
+                    contentPanel.scrollTo({ top: Math.max(0, scrollTop), behavior: 'smooth' });
+                });
+            });
+        })();
+
+
+    </script>
+</body>
+</html>
